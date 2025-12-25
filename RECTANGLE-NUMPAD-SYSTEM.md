@@ -76,7 +76,7 @@ This is a mnemonic-based window management system where pressing ⌘ + any numpa
 | Maximize | `maximize` |
 | Left Half | `leftHalf` |
 | First Third | `firstThird` |
-| Top Left Quarter | `topLeft` |
+| First Fourth (cycles) | `firstFourth` |
 | Center | `center` |
 | Top Left Sixth | `topLeftSixth` |
 | Top Left Eighth | `topLeftEighth` |
@@ -108,8 +108,8 @@ defaults write com.knollsoft.Rectangle leftHalf -dict-add keyCode -float 84 modi
 # 3 = Thirds (three thirds)
 defaults write com.knollsoft.Rectangle firstThird -dict-add keyCode -float 85 modifierFlags -float 1048576
 
-# 4 = Quarters (four corners)
-defaults write com.knollsoft.Rectangle topLeft -dict-add keyCode -float 86 modifierFlags -float 1048576
+# 4 = Quarters (four corners) - cycles TL → TR → BL → BR
+defaults write com.knollsoft.Rectangle firstFourth -dict-add keyCode -float 86 modifierFlags -float 1048576
 
 # 5 = Center (center of numpad = center of screen)
 defaults write com.knollsoft.Rectangle center -dict-add keyCode -float 87 modifierFlags -float 1048576
