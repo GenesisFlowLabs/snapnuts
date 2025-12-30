@@ -57,6 +57,16 @@ Need even more precision? **4² = 16 positions** in a 4×4 grid:
 
 Press repeatedly to cycle through all 16 positions. Perfect for ultra-wide monitors or multi-window workflows.
 
+### Multi-Monitor Support
+
+Both ⌘+4 and ⌘+Option+4 **cycle across displays** automatically:
+
+1. Cycle through all positions on current monitor
+2. After the last position, wraps to position 1 on the **next monitor**
+3. Alert shows `[1/2]` or `[2/2]` to indicate which monitor
+
+Works just like Rectangle's built-in "Cycle across displays" feature.
+
 ---
 
 ## Requirements
