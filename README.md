@@ -2,7 +2,19 @@
 
 **The number = the division.** Window management that teaches itself.
 
-A free, open source window management system for macOS that uses your numpad as an intuitive controller. Press ⌘+4 for fourths. Press ⌘+8 for eighths. The shortcut IS the lesson.
+```
+    ┌─────────────────────────────────────────────────────────┐
+    │                                                         │
+    │   ⌘ + 4  =  Split screen into 4ths                     │
+    │   ⌘ + 8  =  Split screen into 8ths                     │
+    │   ⌘ + 9  =  Split screen into 9ths                     │
+    │                                                         │
+    │   The shortcut IS the lesson.                          │
+    │                                                         │
+    └─────────────────────────────────────────────────────────┘
+```
+
+A free, open source window management system for macOS that turns your numpad into an intuitive window controller. No memorization needed—the number tells you exactly what it does.
 
 <p align="center">
   <img src="logo.png" alt="SnapNuts Logo" width="300">
@@ -10,235 +22,315 @@ A free, open source window management system for macOS that uses your numpad as 
 
 ---
 
-## The System
+## Quick Start
 
-| Shortcut | Action | What it does |
-|----------|--------|--------------|
-| ⌘ + Numpad 0 | Tile All | Organize all windows instantly |
-| ⌘ + Numpad 1 | Maximize | Full screen (toggle) |
-| ⌘ + Numpad 2 | Halves | Cycles left ↔ right |
-| ⌘ + Numpad 3 | Thirds | Cycles left → center → right |
-| ⌘ + Numpad 4 | Fourths + Corners | 8 positions (see below) |
-| ⌘ + Numpad 5 | Center | Centered on screen |
-| ⌘ + Numpad 6 | Sixths | Cycles all 6 positions |
-| ⌘ + Numpad 7 | Almost Maximize | 90% screen with breathing room |
-| ⌘ + Numpad 8 | Eighths | Cycles all 8 positions |
-| ⌘ + Numpad 9 | Ninths | 3×3 grid, cycles all 9 |
-| ⌘ + Option + Numpad 4 | **Sixteenths** | 4×4 grid, cycles all 16 |
+```bash
+# Install dependencies
+brew install --cask rectangle hammerspoon
 
-### The Special Sauce: ⌘+4
+# Download and install SnapNuts config
+curl -fsSL https://raw.githubusercontent.com/GenesisFlowLabs/snapnuts/main/init.lua -o ~/.hammerspoon/init.lua
 
-Unlike other window managers, SnapNuts gives you **8 positions** on a single key:
-
-```
-Presses 1-4 (Fourths):        Presses 5-8 (Corners):
-┌───┬───┬───┬───┐             ┌───────┬───────┐
-│ 1 │ 2 │ 3 │ 4 │             │  TL   │  TR   │
-└───┴───┴───┴───┘             ├───────┼───────┤
-                              │  BL   │  BR   │
-                              └───────┴───────┘
+# Grant Hammerspoon accessibility permissions when prompted
+open -a Hammerspoon
 ```
 
-### Power User Mode: ⌘+Option+4
-
-Need even more precision? **4² = 16 positions** in a 4×4 grid:
-
-```
-┌────┬────┬────┬────┐
-│  1 │  2 │  3 │  4 │
-├────┼────┼────┼────┤
-│  5 │  6 │  7 │  8 │
-├────┼────┼────┼────┤
-│  9 │ 10 │ 11 │ 12 │
-├────┼────┼────┼────┤
-│ 13 │ 14 │ 15 │ 16 │
-└────┴────┴────┴────┘
-```
-
-Press repeatedly to cycle through all 16 positions. Perfect for ultra-wide monitors or multi-window workflows.
-
-### Multi-Monitor Support
-
-Both ⌘+4 and ⌘+Option+4 **cycle across displays** automatically:
-
-1. Cycle through all positions on current monitor
-2. After the last position, wraps to position 1 on the **next monitor**
-3. Alert shows `[1/2]` or `[2/2]` to indicate which monitor
-
-Works just like Rectangle's built-in "Cycle across displays" feature.
+That's it. Start pressing ⌘ + numpad keys.
 
 ---
 
-## Requirements
+## The Complete System
 
-- macOS
-- [Rectangle](https://rectangleapp.com) (free, open source)
-- [Hammerspoon](https://hammerspoon.org) (free, open source)
+Every shortcut cycles through positions, then **automatically moves to the next monitor**.
+
+| Shortcut | Division | Positions | What Happens |
+|:--------:|:--------:|:---------:|:-------------|
+| ⌘ + 0 | Tile All | — | Organizes all visible windows |
+| ⌘ + 1 | **Maximize** | 1 | Full screen → next monitor |
+| ⌘ + 2 | **Halves** | 2 | Left ↔ Right → next monitor |
+| ⌘ + 3 | **Thirds** | 3 | Left → Center → Right → next monitor |
+| ⌘ + 4 | **Fourths + Corners** | 8 | See below |
+| ⌘ + 5 | **Center** | 1 | 80% centered → next monitor |
+| ⌘ + 6 | **Sixths** | 6 | 3×2 grid → next monitor |
+| ⌘ + 7 | **Almost Max** | 1 | 90% centered → next monitor |
+| ⌘ + 8 | **Eighths** | 8 | 4×2 grid → next monitor |
+| ⌘ + 9 | **Ninths** | 9 | 3×3 grid → next monitor |
+| ⌘ + ⌥ + 4 | **Sixteenths** | 16 | 4×4 grid → next monitor |
+
+---
+
+## Visual Guide
+
+### ⌘ + 2: Halves
+```
+┌───────────┬───────────┐
+│           │           │
+│     1     │     2     │
+│           │           │
+└───────────┴───────────┘
+```
+
+### ⌘ + 3: Thirds
+```
+┌───────┬───────┬───────┐
+│       │       │       │
+│   1   │   2   │   3   │
+│       │       │       │
+└───────┴───────┴───────┘
+```
+
+### ⌘ + 4: Fourths + Corners (The Special One)
+
+Unlike other window managers, **one key gives you 8 positions**:
+
+```
+Presses 1-4 (Vertical Strips):       Presses 5-8 (Corners):
+┌─────┬─────┬─────┬─────┐            ┌───────────┬───────────┐
+│     │     │     │     │            │           │           │
+│  1  │  2  │  3  │  4  │            │   5 (TL)  │   6 (TR)  │
+│     │     │     │     │            │           │           │
+│     │     │     │     │            ├───────────┼───────────┤
+│     │     │     │     │            │           │           │
+└─────┴─────┴─────┴─────┘            │   7 (BL)  │   8 (BR)  │
+                                     │           │           │
+                                     └───────────┴───────────┘
+```
+
+### ⌘ + 6: Sixths (3×2)
+```
+┌───────┬───────┬───────┐
+│   1   │   2   │   3   │
+├───────┼───────┼───────┤
+│   4   │   5   │   6   │
+└───────┴───────┴───────┘
+```
+
+### ⌘ + 8: Eighths (4×2)
+```
+┌─────┬─────┬─────┬─────┐
+│  1  │  2  │  3  │  4  │
+├─────┼─────┼─────┼─────┤
+│  5  │  6  │  7  │  8  │
+└─────┴─────┴─────┴─────┘
+```
+
+### ⌘ + 9: Ninths (3×3)
+```
+┌───────┬───────┬───────┐
+│   1   │   2   │   3   │
+├───────┼───────┼───────┤
+│   4   │   5   │   6   │
+├───────┼───────┼───────┤
+│   7   │   8   │   9   │
+└───────┴───────┴───────┘
+```
+
+### ⌘ + ⌥ + 4: Sixteenths (4×4) — Power User Mode
+```
+┌─────┬─────┬─────┬─────┐
+│  1  │  2  │  3  │  4  │
+├─────┼─────┼─────┼─────┤
+│  5  │  6  │  7  │  8  │
+├─────┼─────┼─────┼─────┤
+│  9  │ 10  │ 11  │ 12  │
+├─────┼─────┼─────┼─────┤
+│ 13  │ 14  │ 15  │ 16  │
+└─────┴─────┴─────┴─────┘
+```
+
+Perfect for ultra-wide monitors or precision window placement.
+
+---
+
+## Multi-Monitor Magic
+
+Every shortcut automatically cycles across your displays:
+
+```
+Monitor 1                    Monitor 2
+┌─────────────────┐          ┌─────────────────┐
+│                 │          │                 │
+│  Positions 1-8  │    →     │  Positions 1-8  │    →    (back to Monitor 1)
+│                 │          │                 │
+└─────────────────┘          └─────────────────┘
+
+Alert shows: [1/2]           Alert shows: [2/2]
+```
+
+No extra shortcuts needed. Just keep pressing—it flows naturally.
+
+---
+
+## The Philosophy
+
+Most keyboard shortcuts are arbitrary. `⌘+Shift+Option+Left`? Good luck remembering that.
+
+SnapNuts is different:
+
+| Want this? | Press this |
+|:-----------|:-----------|
+| **2** pieces | ⌘ + **2** |
+| **3** pieces | ⌘ + **3** |
+| **4** pieces | ⌘ + **4** |
+| **8** pieces | ⌘ + **8** |
+| **9** pieces | ⌘ + **9** |
+
+**The number IS the meaning.** You'll never forget it because there's nothing to forget.
 
 ---
 
 ## Installation
 
-### 1. Install the apps
+### Prerequisites
+- macOS
+- A keyboard with a numpad (or use Karabiner to remap keys)
+- [Homebrew](https://brew.sh) (for easy installation)
+
+### Step 1: Install the Apps
 
 ```bash
 brew install --cask rectangle hammerspoon
 ```
 
-### 2. Configure Rectangle
-
-Run this in Terminal:
+### Step 2: Install SnapNuts Config
 
 ```bash
-# Kill Rectangle to apply settings
-pkill -9 Rectangle
+# Backup existing config (if any)
+[ -f ~/.hammerspoon/init.lua ] && cp ~/.hammerspoon/init.lua ~/.hammerspoon/init.lua.backup
 
-# 0 = Tile All
+# Download SnapNuts
+curl -fsSL https://raw.githubusercontent.com/GenesisFlowLabs/snapnuts/main/init.lua -o ~/.hammerspoon/init.lua
+```
+
+### Step 3: Configure Rectangle
+
+Only two shortcuts stay with Rectangle (Tile All and Halves):
+
+```bash
+# Kill Rectangle first
+pkill -9 Rectangle 2>/dev/null
+
+# Configure the two Rectangle shortcuts
 defaults write com.knollsoft.Rectangle tileAll -dict-add keyCode -float 82 modifierFlags -float 1048576
-
-# 1 = Maximize
-defaults write com.knollsoft.Rectangle maximize -dict-add keyCode -float 83 modifierFlags -float 1048576
-
-# 2 = Halves
 defaults write com.knollsoft.Rectangle leftHalf -dict-add keyCode -float 84 modifierFlags -float 1048576
 
-# 3 = Thirds
-defaults write com.knollsoft.Rectangle firstThird -dict-add keyCode -float 85 modifierFlags -float 1048576
-
-# 5 = Center
-defaults write com.knollsoft.Rectangle center -dict-add keyCode -float 87 modifierFlags -float 1048576
-
-# 6 = Sixths
-defaults write com.knollsoft.Rectangle topLeftSixth -dict-add keyCode -float 88 modifierFlags -float 1048576
-
-# 7 = Almost Maximize
-defaults write com.knollsoft.Rectangle almostMaximize -dict-add keyCode -float 89 modifierFlags -float 1048576
-
-# 8 = Eighths
-defaults write com.knollsoft.Rectangle topLeftEighth -dict-add keyCode -float 91 modifierFlags -float 1048576
-
-# 9 = Ninths
-defaults write com.knollsoft.Rectangle topLeftNinth -dict-add keyCode -float 92 modifierFlags -float 1048576
-
 # Restart Rectangle
-open /Applications/Rectangle.app
+open -a Rectangle
 ```
 
-### 3. Configure Hammerspoon
+### Step 4: Grant Permissions
 
-Copy this to `~/.hammerspoon/init.lua`:
+1. Open **Hammerspoon** (it will prompt for accessibility permissions)
+2. Go to **System Settings → Privacy & Security → Accessibility**
+3. Enable **Hammerspoon**
+4. Click the Hammerspoon menu bar icon → **Reload Config**
 
-```lua
--- SnapNuts: Extended cycling for window management
--- ⌘+4: 8 positions (fourths + corners)
--- ⌘+Option+4: 16 positions (4x4 grid)
-
--- Helper function to move window
-local function moveToPosition(positions, index)
-  local win = hs.window.focusedWindow()
-  if not win then return end
-  local screen = win:screen()
-  local f = screen:frame()
-  local pos = positions[index]
-  win:setFrame({
-    x = f.x + (f.w * pos.x),
-    y = f.y + (f.h * pos.y),
-    w = f.w * pos.w,
-    h = f.h * pos.h
-  })
-end
-
--- ⌘+4: Fourths + Corners (8 positions)
-local fourPositions = {
-  {x = 0,    y = 0, w = 0.25, h = 1},     -- Fourth 1
-  {x = 0.25, y = 0, w = 0.25, h = 1},     -- Fourth 2
-  {x = 0.5,  y = 0, w = 0.25, h = 1},     -- Fourth 3
-  {x = 0.75, y = 0, w = 0.25, h = 1},     -- Fourth 4
-  {x = 0,   y = 0,   w = 0.5, h = 0.5},   -- Corner TL
-  {x = 0.5, y = 0,   w = 0.5, h = 0.5},   -- Corner TR
-  {x = 0,   y = 0.5, w = 0.5, h = 0.5},   -- Corner BL
-  {x = 0.5, y = 0.5, w = 0.5, h = 0.5},   -- Corner BR
-}
-local currentFourIndex = 0
-
-hs.hotkey.bind({"cmd"}, "pad4", function()
-  currentFourIndex = (currentFourIndex % #fourPositions) + 1
-  moveToPosition(fourPositions, currentFourIndex)
-end)
-
--- ⌘+Option+4: Sixteenths (4x4 grid = 16 positions)
-local sixteenPositions = {
-  {x = 0,    y = 0,    w = 0.25, h = 0.25},  -- Row 1
-  {x = 0.25, y = 0,    w = 0.25, h = 0.25},
-  {x = 0.5,  y = 0,    w = 0.25, h = 0.25},
-  {x = 0.75, y = 0,    w = 0.25, h = 0.25},
-  {x = 0,    y = 0.25, w = 0.25, h = 0.25},  -- Row 2
-  {x = 0.25, y = 0.25, w = 0.25, h = 0.25},
-  {x = 0.5,  y = 0.25, w = 0.25, h = 0.25},
-  {x = 0.75, y = 0.25, w = 0.25, h = 0.25},
-  {x = 0,    y = 0.5,  w = 0.25, h = 0.25},  -- Row 3
-  {x = 0.25, y = 0.5,  w = 0.25, h = 0.25},
-  {x = 0.5,  y = 0.5,  w = 0.25, h = 0.25},
-  {x = 0.75, y = 0.5,  w = 0.25, h = 0.25},
-  {x = 0,    y = 0.75, w = 0.25, h = 0.25},  -- Row 4
-  {x = 0.25, y = 0.75, w = 0.25, h = 0.25},
-  {x = 0.5,  y = 0.75, w = 0.25, h = 0.25},
-  {x = 0.75, y = 0.75, w = 0.25, h = 0.25},
-}
-local currentSixteenIndex = 0
-
-hs.hotkey.bind({"cmd", "alt"}, "pad4", function()
-  currentSixteenIndex = (currentSixteenIndex % #sixteenPositions) + 1
-  moveToPosition(sixteenPositions, currentSixteenIndex)
-end)
-```
-
-### 4. Grant Permissions
-
-- **Hammerspoon**: System Settings → Privacy & Security → Accessibility → Enable Hammerspoon
-- Reload Hammerspoon (click menu bar icon → Reload Config)
+You should see: `"Hammerspoon: Rectangle Numpad System loaded"`
 
 ---
 
-## Why "The number = the division"?
+## Architecture
 
-Most keyboard shortcuts are arbitrary. You memorize them or you don't.
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        YOUR NUMPAD                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│    ⌘+7        ⌘+8        ⌘+9         (Almost/Eighths/Ninths)│
+│    Almost     Eighths    Ninths                             │
+│                                                             │
+│    ⌘+4        ⌘+5        ⌘+6         (Fourths/Center/Sixths)│
+│    Fourths    Center     Sixths                             │
+│                                                             │
+│    ⌘+1        ⌘+2        ⌘+3         (Max/Halves/Thirds)    │
+│    Maximize   Halves     Thirds                             │
+│                                                             │
+│    ⌘+0                               (Tile All)             │
+│    Tile All                                                 │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
 
-SnapNuts is different. The shortcut teaches itself:
-- Want **2** pieces? Press **2**.
-- Want **3** pieces? Press **3**.
-- Want **8** pieces? Press **8**.
+┌──────────────┐          ┌──────────────┐
+│  Rectangle   │          │ Hammerspoon  │
+│              │          │              │
+│  • Tile All  │          │  • Everything│
+│  • Halves    │          │    else      │
+│              │          │              │
+│  (2 keys)    │          │  (9 keys)    │
+└──────────────┘          └──────────────┘
+```
 
-No manual needed. The number IS the meaning.
+**Why both?** Rectangle handles Tile All (complex multi-window logic) and Halves (simple, no multi-monitor needed). Hammerspoon handles everything else with our custom multi-monitor cycling.
+
+---
+
+## Troubleshooting
+
+### Shortcut not working?
+
+1. **Check Hammerspoon is running** (look for 🔨 in menu bar)
+2. **Reload config**: Click 🔨 → Reload Config
+3. **Check permissions**: System Settings → Privacy & Security → Accessibility → Hammerspoon ✓
+
+### Using a laptop without numpad?
+
+Use [Karabiner-Elements](https://karabiner-elements.pqrs.org/) to remap keys. For example, map `fn + 1-9` to numpad keys.
+
+### Want to customize positions?
+
+Edit `~/.hammerspoon/init.lua`. Each position is defined as:
+```lua
+{x = 0, y = 0, w = 0.5, h = 0.5}  -- x, y = position; w, h = size (as fraction of screen)
+```
 
 ---
 
 ## Origin Story
 
-Created on December 25, 2025 when setting up window management and realizing:
+**December 25, 2025.** Setting up a new Mac. Installing Rectangle. Configuring shortcuts.
+
+Then a thought:
 
 > "Wait... what if the number on the numpad told you exactly what it does?"
 
-Built with Rectangle + Hammerspoon. Filed a feature request. Solved it ourselves. Shared it here.
+We filed a [feature request](https://github.com/rxhanson/Rectangle/issues/1681) on Rectangle. The maintainer pointed to Rectangle Pro. We built it ourselves with Hammerspoon. Shared it publicly. Here we are.
+
+**The best tools are the ones you build for yourself, then give away.**
 
 ---
 
 ## Acknowledgements
 
 - **Name & Logo:** [Skybehind](https://github.com/skybehind) & [Magic Unicorn Tech](https://magicunicorn.tech)
-- **Rectangle:** [rxhanson/Rectangle](https://github.com/rxhanson/Rectangle)
-- **Hammerspoon:** [Hammerspoon/hammerspoon](https://github.com/Hammerspoon/hammerspoon)
+- **Rectangle:** [rxhanson/Rectangle](https://github.com/rxhanson/Rectangle) — The foundation
+- **Hammerspoon:** [Hammerspoon/hammerspoon](https://github.com/Hammerspoon/hammerspoon) — The superpower
+- **Claude Code:** For pair programming at 2am on Christmas
 
 ---
 
 ## License
 
-MIT License - Do whatever you want with it.
+MIT License — Do whatever you want with it.
 
 ---
 
-## A Genesis Flow Labs Release
+## Contributing
 
-Built by [Genesis Flow Labs](https://genesisflowlabs.com)
+Found a bug? Have an idea? PRs welcome.
 
-*"Solve your own problems first."*
+```bash
+# Clone the repo
+git clone https://github.com/GenesisFlowLabs/snapnuts.git
+
+# Edit init.lua
+# Test locally by copying to ~/.hammerspoon/init.lua
+# Submit a PR
+```
+
+---
+
+<p align="center">
+  <strong>A Genesis Flow Labs Release</strong><br>
+  <a href="https://genesisflowlabs.com">genesisflowlabs.com</a><br><br>
+  <em>"Solve your own problems first."</em>
+</p>
