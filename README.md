@@ -287,15 +287,19 @@ Edit `~/.hammerspoon/init.lua`. Each position is defined as:
 
 ## Origin Story
 
-**December 25, 2025.** Setting up a new Mac. Installing Rectangle. Configuring shortcuts.
+**December 25, 2025.** Setting up a new Mac. Installing Rectangle (seriously, one of the best free tools on macOS). Configuring shortcuts.
 
 Then a thought:
 
 > "Wait... what if the number on the numpad told you exactly what it does?"
 
-We filed a [feature request](https://github.com/rxhanson/Rectangle/issues/1681) on Rectangle. The maintainer pointed to Rectangle Pro. We built it ourselves with Hammerspoon. Shared it publicly. Here we are.
+We filed a [feature request](https://github.com/rxhanson/Rectangle/issues/1681) asking about extended cycling. The maintainer (Ryan) kindly pointed out this exists in [Rectangle Pro](https://rectangleapp.com/pro)—which is totally worth it if you want a polished, supported experience.
 
-**The best tools are the ones you build for yourself, then give away.**
+But we were curious. Could we build it ourselves? Christmas Day. Hammerspoon docs open. Claude Code running. A few hours of vibe coding later... SnapNuts was born.
+
+**This isn't a replacement for Rectangle**—it's a love letter to it. Rectangle does the heavy lifting. We just added some numpad magic on top.
+
+*"Solve your own problems first, then share what you learn."*
 
 ---
 
