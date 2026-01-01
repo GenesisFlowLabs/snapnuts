@@ -1,4 +1,4 @@
-# SnapNuts 🥜
+# SnapNuts
 
 **The number = the division.** Window management that teaches itself.
 
@@ -14,7 +14,7 @@
     └─────────────────────────────────────────────────────────┘
 ```
 
-A free, open source window management system for macOS that turns your numpad into an intuitive window controller. No memorization needed—the number tells you exactly what it does.
+A free, open source window management system for macOS that turns your numpad into an intuitive window controller. No memorization needed. The number tells you exactly what it does.
 
 <p align="center">
   <img src="logo.png" alt="SnapNuts Logo" width="300">
@@ -45,7 +45,7 @@ Every shortcut cycles through positions, then **automatically moves to the next 
 
 | Shortcut | Division | Positions | What Happens |
 |:--------:|:--------:|:---------:|:-------------|
-| ⌘ + 0 | Tile All | — | Organizes all visible windows |
+| ⌘ + 0 | Tile All | - | Organizes all visible windows |
 | ⌘ + 1 | **Maximize** | 1 | Full screen → next monitor |
 | ⌘ + 2 | **Halves** | 2 | Left ↔ Right → next monitor |
 | ⌘ + 3 | **Thirds** | 3 | Left → Center → Right → next monitor |
@@ -125,7 +125,7 @@ Presses 1-4 (Vertical Strips):       Presses 5-8 (Corners):
 └───────┴───────┴───────┘
 ```
 
-### ⌘ + ⌥ + 4: Sixteenths (4×4) — Power User Mode
+### ⌘ + ⌥ + 4: Sixteenths (4×4) - Power User Mode
 ```
 ┌─────┬─────┬─────┬─────┐
 │  1  │  2  │  3  │  4  │
@@ -157,7 +157,7 @@ Monitor 1                    Monitor 2
 Alert shows: [1/2]           Alert shows: [2/2]
 ```
 
-No extra shortcuts needed. Just keep pressing—it flows naturally.
+No extra shortcuts needed. Just keep pressing. It flows naturally.
 
 ---
 
@@ -268,9 +268,9 @@ You should see: `"Hammerspoon: Rectangle Numpad System loaded"`
 
 ### Shortcut not working?
 
-1. **Check Hammerspoon is running** (look for 🔨 in menu bar)
-2. **Reload config**: Click 🔨 → Reload Config
-3. **Check permissions**: System Settings → Privacy & Security → Accessibility → Hammerspoon ✓
+1. **Check Hammerspoon is running** (look for the hammer icon in menu bar)
+2. **Reload config**: Click the Hammerspoon menu bar icon, then Reload Config
+3. **Check permissions**: System Settings, Privacy & Security, Accessibility, enable Hammerspoon
 
 ### Using a laptop without numpad?
 
@@ -293,11 +293,11 @@ Then a thought:
 
 > "Wait... what if the number on the numpad told you exactly what it does?"
 
-We filed a [feature request](https://github.com/rxhanson/Rectangle/issues/1681) asking about extended cycling. The maintainer (Ryan) kindly pointed out this exists in [Rectangle Pro](https://rectangleapp.com/pro)—which is totally worth it if you want a polished, supported experience.
+We filed a [feature request](https://github.com/rxhanson/Rectangle/issues/1681) asking about extended cycling. The maintainer (Ryan) kindly pointed out this exists in [Rectangle Pro](https://rectangleapp.com/pro), which is totally worth it if you want a polished, supported experience.
 
 But we were curious. Could we build it ourselves? Christmas Day. Hammerspoon docs open. Claude Code running. A few hours of vibe coding later... SnapNuts was born.
 
-**This isn't a replacement for Rectangle**—it's a love letter to it. Rectangle does the heavy lifting. We just added some numpad magic on top.
+**This isn't a replacement for Rectangle.** It's a love letter to it. Rectangle does the heavy lifting. We just added some numpad magic on top.
 
 *"Solve your own problems first, then share what you learn."*
 
@@ -306,15 +306,15 @@ But we were curious. Could we build it ourselves? Christmas Day. Hammerspoon doc
 ## Acknowledgements
 
 - **Name & Logo:** [Skybehind](https://github.com/skybehind) & [Magic Unicorn Tech](https://magicunicorn.tech)
-- **Rectangle:** [rxhanson/Rectangle](https://github.com/rxhanson/Rectangle) — The foundation
-- **Hammerspoon:** [Hammerspoon/hammerspoon](https://github.com/Hammerspoon/hammerspoon) — The superpower
+- **Rectangle:** [rxhanson/Rectangle](https://github.com/rxhanson/Rectangle)
+- **Hammerspoon:** [Hammerspoon/hammerspoon](https://github.com/Hammerspoon/hammerspoon)
 - **Claude Code:** For pair programming at 2am on Christmas
 
 ---
 
 ## License
 
-MIT License — Do whatever you want with it.
+MIT License. Do whatever you want with it.
 
 ---
 
