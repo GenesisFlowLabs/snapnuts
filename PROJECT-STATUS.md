@@ -1,81 +1,45 @@
-# Shortcut Content - Project Status
+# SnapNuts - Project Status
 
-**Last Updated:** December 25, 2025
-**Status:** PAUSED - System built, ready for content creation when priority rises
-
----
-
-## Latest Update (Dec 25, 2025)
-
-### What Got Done
-- [x] Installed Rectangle (free, open source window manager)
-- [x] Created "Numpad System" - number = division pattern
-- [x] Configured all 10 shortcuts (⌘+Numpad 0-9)
-- [x] Installed Hammerspoon (free, open source) for custom cycling
-- [x] Built extended ⌘+4 cycling (8 positions: fourths + corners)
-- [x] Filed feature request on Rectangle GitHub (#1681)
-- [x] Shared Hammerspoon solution publicly on the issue
-- [x] Maintainer responded - feature exists in Rectangle Pro, open to PRs
-- [x] Issue closed - our solution stands as community resource
-- [x] Documented full journey in `/projects/_journey/`
-- [x] Created ELI5 explanation for ChatGPT handoff
-- [x] Pushed everything to private GitHub repo
-
-### The System (WORKING)
-
-| Shortcut | Action | Handler |
-|----------|--------|---------|
-| ⌘+Numpad 0 | Tile All | Rectangle |
-| ⌘+Numpad 1 | Maximize | Rectangle |
-| ⌘+Numpad 2 | Halves (cycles L↔R) | Rectangle |
-| ⌘+Numpad 3 | Thirds (cycles) | Rectangle |
-| ⌘+Numpad 4 | **Fourths + Corners (8 pos)** | **Hammerspoon** |
-| ⌘+Numpad 5 | Center | Rectangle |
-| ⌘+Numpad 6 | Sixths (cycles) | Rectangle |
-| ⌘+Numpad 7 | Almost Maximize | Rectangle |
-| ⌘+Numpad 8 | Eighths (cycles) | Rectangle |
-| ⌘+Numpad 9 | Ninths (3x3, cycles) | Rectangle |
-
-### GitHub Activity
-- **Feature Request:** https://github.com/rxhanson/Rectangle/issues/1681
-- **Status:** Closed (maintainer responded, pointed to Rectangle Pro)
-- **Our Solution:** Hammerspoon config shared publicly on the issue
+**Last Updated:** January 2, 2026
+**Status:** COMPLETE - Public release, fully functional
 
 ---
 
-## Vision
+## Latest Update (Jan 2, 2026)
 
-Educational short-form content teaching keyboard shortcuts and productivity tips. Platform-agnostic (YouTube Shorts, Instagram Reels, TikTok). Faceless format - value-first, personality optional.
+### What Got Done This Session
+- [x] Added multi-monitor cycling to ALL shortcuts (1,3,4,5,6,7,8,9)
+- [x] Added sixteenths mode (Cmd+Option+4) - 16 positions in 4x4 grid
+- [x] Migrated most shortcuts from Rectangle to Hammerspoon
+- [x] Only Rectangle handles: Tile All (0) and Halves (2)
+- [x] Complete README overhaul with ASCII diagrams
+- [x] Made GitHub repo PUBLIC
+- [x] Added repo topics for discoverability
+- [x] Softened origin story to properly credit Rectangle/Ryan
+- [x] Removed emdashes and emojis (avoid AI-written appearance)
+- [x] Added LICENSE (MIT)
+- [x] Added init.lua to repo for direct download
 
-**The Hook:** "The number = the division" - shortcuts that teach themselves.
+### The System (FINAL)
 
-**Working Title Ideas:**
-- "Shortcut Academy"
-- "Keys to Speed"
-- "Command Everything"
-- (TBD)
+| Shortcut | Action | Handler | Multi-Monitor |
+|----------|--------|---------|---------------|
+| Cmd+0 | Tile All | Rectangle | No |
+| Cmd+1 | Maximize | Hammerspoon | Yes |
+| Cmd+2 | Halves | Rectangle | No |
+| Cmd+3 | Thirds (3 positions) | Hammerspoon | Yes |
+| Cmd+4 | Fourths + Corners (8 positions) | Hammerspoon | Yes |
+| Cmd+5 | Center | Hammerspoon | Yes |
+| Cmd+6 | Sixths (6 positions) | Hammerspoon | Yes |
+| Cmd+7 | Almost Maximize | Hammerspoon | Yes |
+| Cmd+8 | Eighths (8 positions) | Hammerspoon | Yes |
+| Cmd+9 | Ninths (9 positions) | Hammerspoon | Yes |
+| Cmd+Option+4 | Sixteenths (16 positions) | Hammerspoon | Yes |
 
----
-
-## Team Structure (EOS Model)
-
-| Role | Person | Responsibilities |
-|------|--------|------------------|
-| **Visionary** | Shafen | Ideas, direction, content strategy, creative vision |
-| **Integrator** | CJ | Execution, editing, posting, systems, accountability |
-
-**Commitment Level:** Side project (not full-time)
-
----
-
-## Parallel Content Lane
-
-ChatGPT is coaching a separate content track:
-- **Topic:** Digital Identity / iPhone ID / Trust Infrastructure
-- **Positioning:** "Translator" between systems, regulation, and real people
-- **Strategy:** 1-2 posts/week for 30 days, build signal
-
-Both lanes prove the same superpower: simplifying complex systems.
+### GitHub
+- **Repo:** https://github.com/GenesisFlowLabs/snapnuts
+- **Visibility:** PUBLIC
+- **Topics:** macos, window-management, hammerspoon, rectangle, productivity, numpad, keyboard-shortcuts
 
 ---
 
@@ -83,34 +47,20 @@ Both lanes prove the same superpower: simplifying complex systems.
 
 | Component | Status | Location |
 |-----------|--------|----------|
-| Rectangle config | ✅ Working | macOS defaults |
-| Hammerspoon config | ✅ Working | `~/.hammerspoon/init.lua` |
-| System documentation | ✅ Complete | `RECTANGLE-NUMPAD-SYSTEM.md` |
-| ELI5 explanation | ✅ Complete | `ELI5-RECTANGLE-SYSTEM.md` |
-| Journey log | ✅ Complete | `/projects/_journey/` |
-| GitHub repo | ✅ Private | github.com/shafenkhan/shortcut-content |
+| Hammerspoon config | Complete | `~/.hammerspoon/init.lua` and repo `init.lua` |
+| README | Complete | `README.md` with full ASCII diagrams |
+| Logo | Complete | `logo.png` |
+| License | Complete | `LICENSE` (MIT) |
+| Rectangle config | Minimal | Only Tile All and Halves |
 
 ---
 
-## What's Pending
+## Installation (One-Liner)
 
-### Immediate (When Ready)
-- [ ] Name the channel/brand
-- [ ] Pick primary platform (YouTube Shorts vs Reels vs both)
-- [ ] Define CJ's compensation structure
-- [ ] Create content calendar template
-
-### Phase 1 (Build Foundation)
-- [ ] Compile master list of macOS shortcuts worth covering
-- [ ] Create recording setup (screen capture workflow)
-- [ ] Design simple visual template (fonts, colors, style)
-- [ ] Record first 10 test videos
-
-### Phase 2 (Launch)
-- [ ] Create accounts on chosen platforms
-- [ ] Post first batch (3-5 videos)
-- [ ] Analyze performance
-- [ ] Iterate and scale
+```bash
+brew install --cask rectangle hammerspoon
+curl -fsSL https://raw.githubusercontent.com/GenesisFlowLabs/snapnuts/main/init.lua -o ~/.hammerspoon/init.lua
+```
 
 ---
 
@@ -118,43 +68,35 @@ Both lanes prove the same superpower: simplifying complex systems.
 
 | File | Purpose |
 |------|---------|
-| `PROJECT-STATUS.md` | This file - overall tracking |
-| `RECTANGLE-NUMPAD-SYSTEM.md` | Full system design + install script |
-| `ELI5-RECTANGLE-SYSTEM.md` | Simple explanation for content/handoff |
-| `CLAUDE.md` | Quick context for AI assistance |
+| `init.lua` | THE PRODUCT - Hammerspoon config with all shortcuts |
+| `README.md` | Public documentation, install guide, visual diagrams |
+| `logo.png` | SnapNuts logo |
+| `LICENSE` | MIT License |
+| `CLAUDE.md` | Quick context for AI pair programming |
+| `PROJECT-STATUS.md` | This file |
 
 ---
 
-## Tools Used
+## Future Ideas (Not Planned)
 
-| Tool | Type | Purpose |
-|------|------|---------|
-| Rectangle | Free, Open Source | Window management (0-3, 5-9) |
-| Hammerspoon | Free, Open Source (MIT) | Custom cycling (4) |
-| GitHub | Free | Version control, community contribution |
-
----
-
-## Contacts
-
-- **Shafen** - Visionary
-- **CJ** - Integrator (pending onboarding)
-- **Claude Code** - AI pair programmer
-- **ChatGPT** - Social media content coaching
+- [ ] One-line installer script (curl | bash)
+- [ ] Hammerspoon Spoon format
+- [ ] Homebrew cask
+- [ ] Video content showing the system in action
 
 ---
 
-## Future Exploration
+## Credits
 
-- **UC-1 (192.168.0.222)** - Local LLM for content automation
-- Could connect ChatGPT coaching → UC-1 → automated content pipeline
+- **Name & Logo:** Skybehind & Magic Unicorn Tech
+- **Rectangle:** rxhanson/Rectangle (the foundation)
+- **Hammerspoon:** Hammerspoon/hammerspoon (the superpower)
+- **Claude Code:** Pair programming
 
 ---
 
 ## Notes
 
-- This is NOT a full-time commitment
-- Quality over quantity at first
-- Can be anonymous/faceless - no pressure to be "the face"
-- Test with 10-20 videos before deciding to scale
-- "Solve your own problems first" - Aaron Stransky
+- This started as "shortcut content" for video but evolved into a standalone tool
+- The video content idea is paused but the tool itself is complete
+- "Solve your own problems first, then share what you learn."
