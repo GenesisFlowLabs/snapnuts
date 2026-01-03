@@ -39,13 +39,32 @@ end
 
 -- Move window to position on specified screen
 local function moveToPositionOnScreen(win, pos, screen)
-  local f = screen:frame()
-  win:setFrame({
-    x = f.x + (f.w * pos.x),
-    y = f.y + (f.h * pos.y),
-    w = f.w * pos.w,
-    h = f.h * pos.h
-  })
+  -- Check if window is already on target screen
+  local currentScreen = win:screen()
+  local needsMove = currentScreen:id() ~= screen:id()
+
+  if needsMove then
+    -- Move to target screen, then set frame after brief delay
+    win:moveToScreen(screen, false, false, 0)
+    hs.timer.doAfter(0.01, function()
+      local f = win:screen():frame()
+      win:setFrame({
+        x = f.x + (f.w * pos.x),
+        y = f.y + (f.h * pos.y),
+        w = f.w * pos.w,
+        h = f.h * pos.h
+      })
+    end)
+  else
+    -- Already on correct screen, set frame immediately
+    local f = screen:frame()
+    win:setFrame({
+      x = f.x + (f.w * pos.x),
+      y = f.y + (f.h * pos.y),
+      w = f.w * pos.w,
+      h = f.h * pos.h
+    })
+  end
 end
 
 -- Track current screen index for cycling across displays
@@ -228,6 +247,34 @@ hs.hotkey.bind({"cmd"}, "pad1", function()
 end)
 
 -- ============================================================
+-- HALVES: ⌘+Numpad 2
+-- Left/Right halves, cycles across monitors
+-- ============================================================
+
+local halfPositions = {
+  {x = 0,   y = 0, w = 0.5, h = 1},  -- 1: Left half
+  {x = 0.5, y = 0, w = 0.5, h = 1},  -- 2: Right half
+}
+
+local currentHalfIndex = 0
+
+hs.hotkey.bind({"cmd"}, "pad2", function()
+  local wrapAround = false
+  currentHalfIndex = currentHalfIndex + 1
+  if currentHalfIndex > #halfPositions then
+    currentHalfIndex = 1
+    wrapAround = true
+  end
+
+  moveToPosition(halfPositions, currentHalfIndex, wrapAround)
+
+  local labels = {"Left", "Right"}
+  local screens = getSortedScreens()
+  local screenInfo = " [" .. currentScreenIndex .. "/" .. #screens .. "]"
+  hs.alert.show("Half " .. labels[currentHalfIndex] .. screenInfo, 0.5)
+end)
+
+-- ============================================================
 -- THIRDS: ⌘+Numpad 3
 -- 3 vertical strips, cycles across monitors
 -- ============================================================
@@ -382,6 +429,7 @@ end)
 
 print("SnapNuts: Full numpad system with multi-monitor cycling")
 print("  ⌘+1: Maximize (cycles monitors)")
+print("  ⌘+2: Halves (2 positions)")
 print("  ⌘+3: Thirds (3 positions)")
 print("  ⌘+4: Fourths + Corners (8 positions)")
 print("  ⌘+5: Center (cycles monitors)")
