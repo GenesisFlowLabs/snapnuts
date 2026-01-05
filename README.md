@@ -22,7 +22,46 @@ A free, open source window management system for macOS that turns your numpad in
 
 ---
 
-## Quick Start
+## Native macOS App (New!)
+
+SnapNuts is now available as a **native macOS app** built with Swift and SwiftUI. No dependencies required.
+
+<p align="center">
+  <img src="screenshots/settings-general.png" alt="General Settings" width="280">
+  <img src="screenshots/settings-shortcuts.png" alt="Customizable Shortcuts" width="280">
+  <img src="screenshots/settings-about.png" alt="About" width="280">
+</p>
+
+### Features
+- **Native Performance** - Built with Swift, runs as a lightweight menu bar app
+- **Customizable Shortcuts** - Click "Learn" to record any key combination
+- **Visual Feedback** - On-screen alerts show which position you've snapped to
+- **Multi-Monitor Support** - Automatically cycles through all your displays
+- **No Dependencies** - Just download and run
+
+### Download & Build
+
+```bash
+# Clone the repo
+git clone https://github.com/GenesisFlowLabs/snapnuts.git
+cd snapnuts/SnapNutsApp
+
+# Build the app
+./build.sh
+
+# Run it
+open build/SnapNuts.app
+```
+
+The app lives in your menu bar. Click the squirrel icon to access Settings or Quit.
+
+---
+
+## Hammerspoon Version (Original)
+
+Prefer a Lua-based setup with Rectangle integration? The original Hammerspoon config is still available and fully supported.
+
+## Quick Start (Hammerspoon)
 
 ```bash
 # Install dependencies
