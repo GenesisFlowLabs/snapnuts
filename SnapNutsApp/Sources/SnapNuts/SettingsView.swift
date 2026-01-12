@@ -158,6 +158,7 @@ struct AboutView: View {
                 AboutRow(label: "Created by", value: "Genesis Flow Labs", url: "https://genesisflowlabs.com")
                 AboutRow(label: "Refined by", value: "Magic Unicorn Tech", url: "https://magicunicorn.tech")
                 AboutRow(label: "Logo by", value: "Skybehind", url: "https://github.com/skybehind")
+                AboutRow(label: "Built with", value: "Claude (Anthropic)", url: "https://claude.ai")
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 40)

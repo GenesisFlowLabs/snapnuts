@@ -1,65 +1,111 @@
 # SnapNuts
 
 ## Quick Context
-SnapNuts is a free, open source window management system for macOS. The core idea: **the number = the division**. Press Cmd+4 for fourths, Cmd+8 for eighths. The shortcut teaches itself.
+SnapNuts is a free, open source window management app for macOS. The core idea: **the number = the division**. Press Cmd+4 for fourths, Cmd+8 for eighths. The shortcut teaches itself.
 
-**Project Location:** `/Users/shafenkhan/projects/shortcut-content/`
+**Project Location:** `/Users/shafenkhan/projects/snapnuts/`
 
 **GitHub (PUBLIC):** https://github.com/GenesisFlowLabs/snapnuts
 
-## Current State (Jan 2, 2026)
+## Current State (Jan 7, 2026)
 
-The system is COMPLETE and PUBLIC. All shortcuts work with multi-monitor cycling.
+Native macOS app built with Swift/SwiftUI. Fully functional, publicly released.
 
 ### Architecture
 
-| Shortcut | Handler | Multi-Monitor |
-|----------|---------|---------------|
-| Cmd+0 | Rectangle | No (Tile All) |
-| Cmd+1 | Hammerspoon | Yes |
-| Cmd+2 | Rectangle | No (Halves) |
-| Cmd+3 | Hammerspoon | Yes |
-| Cmd+4 | Hammerspoon | Yes (8 positions: fourths + corners) |
-| Cmd+5 | Hammerspoon | Yes |
-| Cmd+6 | Hammerspoon | Yes |
-| Cmd+7 | Hammerspoon | Yes |
-| Cmd+8 | Hammerspoon | Yes |
-| Cmd+9 | Hammerspoon | Yes |
-| Cmd+Option+4 | Hammerspoon | Yes (16 positions: 4x4 grid) |
+The app is a standalone native macOS menu bar application:
 
-### Key Files
-
-| File | Purpose |
-|------|---------|
-| `init.lua` | The Hammerspoon config (this IS the product) |
-| `README.md` | Public-facing documentation with install instructions |
-| `logo.png` | SnapNuts logo (by Skybehind/Magic Unicorn Tech) |
-| `LICENSE` | MIT License |
-
-### Installation (for users)
-
-```bash
-brew install --cask rectangle hammerspoon
-curl -fsSL https://raw.githubusercontent.com/GenesisFlowLabs/snapnuts/main/init.lua -o ~/.hammerspoon/init.lua
+```
+SnapNutsApp/
+├── Package.swift              # Swift Package Manager config
+├── build.sh                   # Build script
+├── Resources/
+│   ├── AppIcon.appiconset/    # App icons (all sizes)
+│   ├── StatusBarIcon.png      # Menu bar icon
+│   └── StatusBarIcon@2x.png
+└── Sources/SnapNuts/
+    ├── SnapNutsApp.swift      # Main app entry point
+    ├── WindowManager.swift    # Window positioning logic (Accessibility API)
+    ├── HotkeyManager.swift    # Global keyboard shortcuts (Carbon Events)
+    ├── SettingsView.swift     # SwiftUI settings UI with tabs
+    ├── ShortcutRecorder.swift # "Learn" feature for custom shortcuts
+    ├── AlertWindow.swift      # Visual feedback overlay
+    ├── Info.plist             # App metadata
+    └── SnapNuts.entitlements  # Accessibility permissions
 ```
 
-### Local Development
+### Tech Stack
 
-The Hammerspoon config lives at `~/.hammerspoon/init.lua`. Edit there, then click the Hammerspoon menu bar icon and Reload Config to test changes. Copy back to repo when done.
+| Component | Technology |
+|-----------|------------|
+| UI Framework | SwiftUI |
+| Window Management | AppKit + Accessibility API (AXUIElement) |
+| Hotkey Registration | Carbon Event Manager |
+| Settings Storage | UserDefaults |
+| Distribution | DMG installer |
 
-## What Was Done This Session
+### Shortcuts
 
-1. Added multi-monitor cycling to ALL Hammerspoon shortcuts (1,3,4,5,6,7,8,9)
-2. Added sixteenths (Cmd+Option+4) for 16-position 4x4 grid
-3. Migrated most shortcuts from Rectangle to Hammerspoon
-4. Created comprehensive README with ASCII diagrams
-5. Made repo PUBLIC
-6. Added topics: macos, window-management, hammerspoon, rectangle, productivity, numpad, keyboard-shortcuts
-7. Softened origin story to properly credit Rectangle
-8. Removed emdashes and emojis to avoid AI-written appearance
+| Shortcut | Division | Positions |
+|:--------:|:--------:|:----------|
+| Cmd + 0 | Tile All | Organizes all visible windows |
+| Cmd + 1 | Maximize | Full screen, cycles monitors |
+| Cmd + 2 | Halves | Left / Right |
+| Cmd + 3 | Thirds | Left / Center / Right |
+| Cmd + 4 | Fourths | 4 strips + 4 corners (8 total) |
+| Cmd + 5 | Center | 80% centered |
+| Cmd + 6 | Sixths | 3x2 grid |
+| Cmd + 7 | Almost Max | 90% centered |
+| Cmd + 8 | Eighths | 4x2 grid |
+| Cmd + 9 | Ninths | 3x3 grid |
+| Cmd + Opt + 4 | Sixteenths | 4x4 grid |
 
-## Origin
+### Building
 
-Created December 25, 2025. Filed feature request on Rectangle (#1681), maintainer pointed to Rectangle Pro. Built it ourselves with Hammerspoon. Shared publicly.
+```bash
+cd SnapNutsApp
+./build.sh
+open build/SnapNuts.app
+```
+
+## Project History
+
+### Phase 1: Concept & Hammerspoon (Dec 25, 2025)
+- **Creator:** Shafen Khan / Genesis Flow Labs
+- **AI Assistance:** Claude (Anthropic)
+- Filed feature request on Rectangle (#1681), maintainer pointed to Rectangle Pro
+- Built proof-of-concept using Hammerspoon + Rectangle
+- Core insight: "the number = the division"
+
+### Phase 2: Native Swift App (Jan 7, 2026)
+- **Developer:** Aaron / Magic Unicorn Tech
+- **AI Assistance:** Claude (Anthropic)
+- Converted Hammerspoon config to standalone native macOS app
+- Added SwiftUI settings UI with customizable shortcuts
+- Added "Learn" feature to record custom key combinations
+- Added visual feedback alerts
+
+## AI Transparency
+
+This project was built with significant AI assistance. We believe in being transparent about this:
+
+- **Concept & Direction:** Human (Shafen Khan)
+- **Code Generation:** Claude (Anthropic) - both Hammerspoon and Swift versions
+- **Refinement & Native App:** Human (Aaron) + Claude
+
+This is "vibe-coded" software - the humans provided the vision, problem definition, and guidance while AI assisted with implementation. We're proud of what we built together and believe in honest attribution.
+
+## Credits
+
+| Role | Credit |
+|------|--------|
+| Created by | Genesis Flow Labs |
+| Refined by | Magic Unicorn Tech |
+| Logo | Skybehind |
+| AI Assistance | Claude (Anthropic) |
+
+## Origin Story
 
 "Solve your own problems first, then share what you learn."
+
+Created December 25, 2025 when Shafen wanted numpad-based window management. Rectangle couldn't do it natively, so we built it ourselves - first with Hammerspoon, then as a proper native app. Now it's free for everyone.

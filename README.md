@@ -216,6 +216,9 @@ snapnuts/
 | **Created by** | [Genesis Flow Labs](https://genesisflowlabs.com) |
 | **Refined by** | [Magic Unicorn Tech](https://magicunicorn.tech) |
 | **Logo** | [Skybehind](https://github.com/skybehind) |
+| **Built with** | [Claude](https://claude.ai) (Anthropic) |
+
+This project was built with AI assistance. The humans provided the vision and direction, Claude helped with implementation.
 
 ---
 
