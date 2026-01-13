@@ -202,6 +202,8 @@ struct AboutRow: View {
     }
 }
 
+#if DEBUG && canImport(PreviewsMacros)
 #Preview {
     SettingsView()
 }
+#endif
