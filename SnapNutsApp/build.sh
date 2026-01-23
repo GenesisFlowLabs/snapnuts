@@ -2,12 +2,13 @@
 set -e
 
 # SnapNuts Build Script
-# Creates a proper macOS app bundle
+# Creates a proper macOS app bundle with Sparkle auto-updates
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="$SCRIPT_DIR/build"
 APP_NAME="SnapNuts"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
+SPARKLE_FRAMEWORK="$SCRIPT_DIR/Frameworks/Sparkle.framework"
 
 echo "Building SnapNuts..."
 
@@ -18,6 +19,7 @@ mkdir -p "$BUILD_DIR"
 # Create app bundle structure
 mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Resources"
+mkdir -p "$APP_BUNDLE/Contents/Frameworks"
 
 # Compile Swift sources
 echo "Compiling Swift sources..."
@@ -30,6 +32,9 @@ swiftc \
     -framework SwiftUI \
     -framework Carbon \
     -framework ApplicationServices \
+    -F "$SCRIPT_DIR/Frameworks" \
+    -framework Sparkle \
+    -Xlinker -rpath -Xlinker @executable_path/../Frameworks \
     -parse-as-library \
     -o "$APP_BUNDLE/Contents/MacOS/$APP_NAME" \
     "$SCRIPT_DIR/Sources/SnapNuts/SnapNutsApp.swift" \
@@ -37,12 +42,17 @@ swiftc \
     "$SCRIPT_DIR/Sources/SnapNuts/HotkeyManager.swift" \
     "$SCRIPT_DIR/Sources/SnapNuts/AlertWindow.swift" \
     "$SCRIPT_DIR/Sources/SnapNuts/SettingsView.swift" \
-    "$SCRIPT_DIR/Sources/SnapNuts/ShortcutRecorder.swift"
+    "$SCRIPT_DIR/Sources/SnapNuts/ShortcutRecorder.swift" \
+    "$SCRIPT_DIR/Sources/SnapNuts/OnboardingView.swift"
 
 echo "Swift compilation complete."
 
 # Copy Info.plist
 cp "$SCRIPT_DIR/Sources/SnapNuts/Info.plist" "$APP_BUNDLE/Contents/"
+
+# Copy Sparkle framework
+echo "Embedding Sparkle framework..."
+cp -R "$SPARKLE_FRAMEWORK" "$APP_BUNDLE/Contents/Frameworks/"
 
 # Copy Resources
 echo "Copying resources..."
@@ -81,8 +91,9 @@ fi
 # Create PkgInfo
 echo -n "APPL????" > "$APP_BUNDLE/Contents/PkgInfo"
 
-# Sign the app (ad-hoc for local use)
+# Sign the app and embedded frameworks
 echo "Signing app..."
+codesign --force --deep --sign - "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
 codesign --force --deep --sign - "$APP_BUNDLE"
 
 echo ""

@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import Sparkle
 
 @main
 struct SnapNutsApp: App {
@@ -24,12 +25,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var onboardingWindow: NSWindow?
     var permissionCheckTimer: Timer?
 
+    // Sparkle updater controller
+    var updaterController: SPUStandardUpdaterController!
+
     // Check if this is the first launch
     var isFirstLaunch: Bool {
         !UserDefaults.standard.bool(forKey: "hasLaunchedBefore")
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Initialize Sparkle updater
+        updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+
         // Initialize managers
         windowManager = WindowManager()
         hotkeyManager = HotkeyManager(windowManager: windowManager!)
@@ -181,6 +188,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let onboardingItem = NSMenuItem(title: "Show Welcome Guide...", action: #selector(showOnboardingFromMenu), keyEquivalent: "")
         onboardingItem.target = self
         menu.addItem(onboardingItem)
+
+        // Check for Updates
+        let updateItem = NSMenuItem(title: "Check for Updates...", action: #selector(SPUStandardUpdaterController.checkForUpdates(_:)), keyEquivalent: "u")
+        updateItem.target = updaterController
+        menu.addItem(updateItem)
 
         menu.addItem(NSMenuItem.separator())
 
