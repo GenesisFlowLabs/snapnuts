@@ -4,29 +4,79 @@ struct SettingsView: View {
     @AppStorage("launchAtLogin") private var launchAtLogin = false
     @AppStorage("showAlerts") private var showAlerts = true
     @AppStorage("alertDuration") private var alertDuration = 0.5
+    @State private var hasAccessibility = AXIsProcessTrusted()
+
+    // Check permission less frequently to avoid race conditions
+    let timer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        TabView {
-            GeneralSettingsView(
-                launchAtLogin: $launchAtLogin,
-                showAlerts: $showAlerts,
-                alertDuration: $alertDuration
-            )
-            .tabItem {
-                Label("General", systemImage: "gear")
+        VStack(spacing: 0) {
+            // Permission warning banner - always reserve space to avoid window resize
+            if !hasAccessibility {
+                PermissionBanner()
             }
 
-            ShortcutsEditorView()
-            .tabItem {
-                Label("Shortcuts", systemImage: "keyboard")
-            }
+            TabView {
+                GeneralSettingsView(
+                    launchAtLogin: $launchAtLogin,
+                    showAlerts: $showAlerts,
+                    alertDuration: $alertDuration,
+                    hasAccessibility: $hasAccessibility
+                )
+                .tabItem {
+                    Label("General", systemImage: "gear")
+                }
 
-            AboutView()
-            .tabItem {
-                Label("About", systemImage: "info.circle")
+                ShortcutsEditorView()
+                .tabItem {
+                    Label("Shortcuts", systemImage: "keyboard")
+                }
+
+                AboutView()
+                .tabItem {
+                    Label("About", systemImage: "info.circle")
+                }
             }
         }
-        .frame(width: 520, height: 480)
+        // Fixed frame size - never resize window dynamically to avoid SwiftUI/AppKit race conditions
+        .frame(width: 520, height: 500)
+        .onReceive(timer) { _ in
+            // Only update if value actually changed to minimize UI updates
+            let newValue = AXIsProcessTrusted()
+            if newValue != hasAccessibility {
+                hasAccessibility = newValue
+            }
+        }
+    }
+}
+
+struct PermissionBanner: View {
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.title2)
+                .foregroundColor(.white)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Accessibility Permission Required")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                Text("SnapNuts needs permission to manage windows")
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.9))
+            }
+
+            Spacer()
+
+            Button("Grant Access") {
+                let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
+                NSWorkspace.shared.open(url)
+            }
+            .buttonStyle(.bordered)
+            .tint(.white)
+        }
+        .padding()
+        .background(Color.orange)
     }
 }
 
@@ -34,6 +84,7 @@ struct GeneralSettingsView: View {
     @Binding var launchAtLogin: Bool
     @Binding var showAlerts: Bool
     @Binding var alertDuration: Double
+    @Binding var hasAccessibility: Bool
 
     var body: some View {
         Form {
@@ -64,7 +115,7 @@ struct GeneralSettingsView: View {
                 HStack {
                     Text("Accessibility")
                     Spacer()
-                    if AXIsProcessTrusted() {
+                    if hasAccessibility {
                         Label("Enabled", systemImage: "checkmark.circle.fill")
                             .foregroundColor(.green)
                     } else {

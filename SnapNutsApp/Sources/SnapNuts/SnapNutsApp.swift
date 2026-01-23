@@ -21,11 +21,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var windowManager: WindowManager?
     var alertWindow: AlertWindow?
     var settingsWindow: NSWindow?
+    var onboardingWindow: NSWindow?
+    var permissionCheckTimer: Timer?
+
+    // Check if this is the first launch
+    var isFirstLaunch: Bool {
+        !UserDefaults.standard.bool(forKey: "hasLaunchedBefore")
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Request accessibility permissions
-        requestAccessibilityPermissions()
-
         // Initialize managers
         windowManager = WindowManager()
         hotkeyManager = HotkeyManager(windowManager: windowManager!)
@@ -40,42 +44,126 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Keep dock icon visible (default behavior for standard app)
         NSApp.setActivationPolicy(.regular)
+
+        // Show onboarding or check permissions
+        if isFirstLaunch || !AXIsProcessTrusted() {
+            showOnboarding()
+        } else {
+            // Start permission monitoring for menu bar indicator
+            startPermissionMonitoring()
+        }
     }
 
-    func requestAccessibilityPermissions() {
-        // First check if already trusted (without prompting)
-        let alreadyTrusted = AXIsProcessTrusted()
+    func showOnboarding() {
+        if onboardingWindow == nil {
+            let onboardingView = OnboardingView(onComplete: { [weak self] in
+                self?.completeOnboarding()
+            })
 
-        if !alreadyTrusted {
-            // Only prompt if not already trusted
-            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
-            _ = AXIsProcessTrustedWithOptions(options as CFDictionary)
-            print("SnapNuts needs Accessibility permissions to manage windows.")
-            print("Please enable in System Settings > Privacy & Security > Accessibility")
+            onboardingWindow = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 500, height: 520),
+                styleMask: [.titled, .closable],
+                backing: .buffered,
+                defer: false
+            )
+            onboardingWindow?.title = "Welcome to SnapNuts"
+            onboardingWindow?.contentView = NSHostingView(rootView: onboardingView)
+            onboardingWindow?.center()
+            onboardingWindow?.isReleasedWhenClosed = false
+        }
+
+        onboardingWindow?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    func completeOnboarding() {
+        UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
+        onboardingWindow?.close()
+        onboardingWindow = nil
+
+        // Update menu bar status
+        updateStatusBarIcon()
+        startPermissionMonitoring()
+
+        // If permissions not granted, the menu will show the warning
+        if !AXIsProcessTrusted() {
+            // Show a subtle reminder
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.openSettings()
+            }
+        }
+    }
+
+    func startPermissionMonitoring() {
+        // Check permission status periodically to update UI
+        // Use longer interval (10s) to avoid excessive polling and potential race conditions
+        permissionCheckTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
+            self?.updateStatusBarIcon()
         }
     }
 
     func setupStatusBar() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-
-        if let button = statusItem?.button {
-            // Try to load custom icon, fall back to SF Symbol
-            if let iconImage = NSImage(named: "StatusBarIcon") {
-                iconImage.size = NSSize(width: 18, height: 18)
-                iconImage.isTemplate = true
-                button.image = iconImage
-            } else {
-                button.image = NSImage(systemSymbolName: "square.grid.3x3", accessibilityDescription: "SnapNuts")
-            }
-            button.toolTip = "SnapNuts - Window Manager"
-        }
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        updateStatusBarIcon()
 
         let menu = NSMenu()
+
+        // Title with permission status
+        updateMenu(menu)
+
+        statusItem?.menu = menu
+    }
+
+    func updateStatusBarIcon() {
+        guard let button = statusItem?.button else { return }
+
+        let hasPermission = AXIsProcessTrusted()
+
+        // Try to load custom icon, fall back to SF Symbol
+        if let iconImage = NSImage(named: "StatusBarIcon") {
+            iconImage.size = NSSize(width: 18, height: 18)
+            iconImage.isTemplate = true
+            button.image = iconImage
+        } else {
+            button.image = NSImage(systemSymbolName: "square.grid.3x3", accessibilityDescription: "SnapNuts")
+        }
+
+        // Add warning badge if no permission
+        if !hasPermission {
+            button.image = NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: "SnapNuts - Permission Required")
+        }
+
+        button.toolTip = hasPermission ? "SnapNuts - Window Manager" : "SnapNuts - Permission Required"
+
+        // Update menu
+        if let menu = statusItem?.menu {
+            updateMenu(menu)
+        }
+    }
+
+    func updateMenu(_ menu: NSMenu) {
+        menu.removeAllItems()
+
+        let hasPermission = AXIsProcessTrusted()
 
         // Title
         let titleItem = NSMenuItem(title: "SnapNuts", action: nil, keyEquivalent: "")
         titleItem.isEnabled = false
         menu.addItem(titleItem)
+
+        // Permission warning if needed
+        if !hasPermission {
+            menu.addItem(NSMenuItem.separator())
+
+            let warningItem = NSMenuItem(title: "⚠️ Accessibility Permission Required", action: #selector(openAccessibilitySettings), keyEquivalent: "")
+            warningItem.target = self
+            menu.addItem(warningItem)
+
+            let helpItem = NSMenuItem(title: "   Click to grant access...", action: #selector(openAccessibilitySettings), keyEquivalent: "")
+            helpItem.target = self
+            helpItem.isEnabled = true
+            menu.addItem(helpItem)
+        }
 
         menu.addItem(NSMenuItem.separator())
 
@@ -89,12 +177,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Settings
         menu.addItem(NSMenuItem(title: "Settings...", action: #selector(openSettings), keyEquivalent: ","))
 
+        // Show onboarding again option
+        let onboardingItem = NSMenuItem(title: "Show Welcome Guide...", action: #selector(showOnboardingFromMenu), keyEquivalent: "")
+        onboardingItem.target = self
+        menu.addItem(onboardingItem)
+
         menu.addItem(NSMenuItem.separator())
 
         // Quit
         menu.addItem(NSMenuItem(title: "Quit SnapNuts", action: #selector(quitApp), keyEquivalent: "q"))
+    }
 
-        statusItem?.menu = menu
+    @objc func openAccessibilitySettings() {
+        let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
+        NSWorkspace.shared.open(url)
+    }
+
+    @objc func showOnboardingFromMenu() {
+        showOnboarding()
     }
 
     func createShortcutsMenu() -> NSMenu {
@@ -144,11 +244,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func quitApp() {
         hotkeyManager?.unregisterHotkeys()
+        permissionCheckTimer?.invalidate()
         NSApplication.shared.terminate(nil)
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         hotkeyManager?.unregisterHotkeys()
+        permissionCheckTimer?.invalidate()
     }
 
     // Handle dock icon click - open Settings window

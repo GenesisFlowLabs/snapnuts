@@ -1,11 +1,42 @@
 # SnapNuts - Project Status
 
-**Last Updated:** January 2, 2026
-**Status:** COMPLETE - Public release, fully functional
+**Last Updated:** January 22, 2026
+**Status:** ACTIVE - Native Swift app, investigating crash
 
 ---
 
-## Latest Update (Jan 2, 2026)
+## Latest Update (Jan 22, 2026)
+
+### Crash Investigation
+
+**Crash Date:** 2026-01-22 23:02 CST
+**Uptime Before Crash:** ~3 days (launched Jan 19)
+
+**Root Cause:** SwiftUI/AppKit window layout race condition
+
+In `SettingsView.swift`, a 1-second timer constantly checks accessibility permission:
+```swift
+.frame(width: 520, height: hasAccessibility ? 480 : 540)
+.onReceive(timer) { _ in
+    hasAccessibility = AXIsProcessTrusted()
+}
+```
+
+When `hasAccessibility` changes, the window height jumps 60px. After running for days, this triggered a race condition:
+1. Timer fires, state changes
+2. SwiftUI requests frame resize
+3. AppKit display cycle updates constraints
+4. `NSHostingView.invalidateSafeAreaInsets()` conflicts with resize
+5. `SIGABRT` - exception during layout
+
+**Fix Required:**
+- Remove dynamic frame sizing tied to rapid state changes
+- Use fixed frame or animate changes more carefully
+- Reduce timer frequency or remove unnecessary polling
+
+---
+
+## Previous Update (Jan 2, 2026)
 
 ### What Got Done This Session
 - [x] Added multi-monitor cycling to ALL shortcuts (1,3,4,5,6,7,8,9)
