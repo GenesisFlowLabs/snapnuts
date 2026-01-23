@@ -35,9 +35,9 @@ class WindowManager {
     ]
 
     let thirdPositions = [
-        WindowPosition(0, 0, 0.333, 1),      // Left third
-        WindowPosition(0.333, 0, 0.334, 1),  // Center third
-        WindowPosition(0.667, 0, 0.333, 1)   // Right third
+        WindowPosition(0, 0, 1.0/3.0, 1),        // Left third
+        WindowPosition(1.0/3.0, 0, 1.0/3.0, 1),  // Center third
+        WindowPosition(2.0/3.0, 0, 1.0/3.0, 1)   // Right third
     ]
 
     let fourthPositions = [
@@ -59,13 +59,13 @@ class WindowManager {
 
     let sixthPositions = [
         // Row 1 (top)
-        WindowPosition(0, 0, 0.333, 0.5),      // Top-left
-        WindowPosition(0.333, 0, 0.334, 0.5),  // Top-center
-        WindowPosition(0.667, 0, 0.333, 0.5),  // Top-right
+        WindowPosition(0, 0, 1.0/3.0, 0.5),        // Top-left
+        WindowPosition(1.0/3.0, 0, 1.0/3.0, 0.5),  // Top-center
+        WindowPosition(2.0/3.0, 0, 1.0/3.0, 0.5),  // Top-right
         // Row 2 (bottom)
-        WindowPosition(0, 0.5, 0.333, 0.5),    // Bottom-left
-        WindowPosition(0.333, 0.5, 0.334, 0.5),// Bottom-center
-        WindowPosition(0.667, 0.5, 0.333, 0.5) // Bottom-right
+        WindowPosition(0, 0.5, 1.0/3.0, 0.5),      // Bottom-left
+        WindowPosition(1.0/3.0, 0.5, 1.0/3.0, 0.5),// Bottom-center
+        WindowPosition(2.0/3.0, 0.5, 1.0/3.0, 0.5) // Bottom-right
     ]
 
     let almostMaxPositions = [
@@ -87,17 +87,17 @@ class WindowManager {
 
     let ninthPositions = [
         // Row 1 (top)
-        WindowPosition(0, 0, 0.333, 0.333),      // Top-left
-        WindowPosition(0.333, 0, 0.334, 0.333),  // Top-center
-        WindowPosition(0.667, 0, 0.333, 0.333),  // Top-right
+        WindowPosition(0, 0, 1.0/3.0, 1.0/3.0),          // Top-left
+        WindowPosition(1.0/3.0, 0, 1.0/3.0, 1.0/3.0),    // Top-center
+        WindowPosition(2.0/3.0, 0, 1.0/3.0, 1.0/3.0),    // Top-right
         // Row 2 (middle)
-        WindowPosition(0, 0.333, 0.333, 0.334),  // Middle-left
-        WindowPosition(0.333, 0.333, 0.334, 0.334), // Middle-center
-        WindowPosition(0.667, 0.333, 0.333, 0.334), // Middle-right
+        WindowPosition(0, 1.0/3.0, 1.0/3.0, 1.0/3.0),          // Middle-left
+        WindowPosition(1.0/3.0, 1.0/3.0, 1.0/3.0, 1.0/3.0),    // Middle-center
+        WindowPosition(2.0/3.0, 1.0/3.0, 1.0/3.0, 1.0/3.0),    // Middle-right
         // Row 3 (bottom)
-        WindowPosition(0, 0.667, 0.333, 0.333),    // Bottom-left
-        WindowPosition(0.333, 0.667, 0.334, 0.333),// Bottom-center
-        WindowPosition(0.667, 0.667, 0.333, 0.333) // Bottom-right
+        WindowPosition(0, 2.0/3.0, 1.0/3.0, 1.0/3.0),          // Bottom-left
+        WindowPosition(1.0/3.0, 2.0/3.0, 1.0/3.0, 1.0/3.0),    // Bottom-center
+        WindowPosition(2.0/3.0, 2.0/3.0, 1.0/3.0, 1.0/3.0)     // Bottom-right
     ]
 
     let sixteenthPositions: [WindowPosition] = {
@@ -200,10 +200,17 @@ class WindowManager {
     func moveWindowToPosition(_ window: AXUIElement, position: WindowPosition, screen: NSScreen) {
         let frame = screen.visibleFrame
 
-        let newX = frame.origin.x + (frame.width * position.x)
-        let newY = frame.origin.y + (frame.height * (1 - position.y - position.height)) // Flip Y coordinate
-        let newWidth = frame.width * position.width
-        let newHeight = frame.height * position.height
+        // Calculate pixel boundaries using consistent rounding to eliminate gaps
+        // By calculating start and end positions separately, adjacent windows share exact boundaries
+        let startX = round(frame.width * position.x)
+        let endX = round(frame.width * (position.x + position.width))
+        let startY = round(frame.height * position.y)
+        let endY = round(frame.height * (position.y + position.height))
+
+        let newX = frame.origin.x + startX
+        let newY = frame.origin.y + frame.height - endY  // Flip Y coordinate (macOS origin is bottom-left)
+        let newWidth = endX - startX
+        let newHeight = endY - startY
 
         setWindowPosition(window, position: CGPoint(x: newX, y: newY))
         setWindowSize(window, size: CGSize(width: newWidth, height: newHeight))
