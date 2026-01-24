@@ -170,7 +170,41 @@ Perfect for ultra-wide monitors.
 
 - macOS 13.0 (Ventura) or later
 - Apple Silicon or Intel
-- Accessibility permissions (prompted on first launch)
+- Accessibility permissions (see below)
+
+---
+
+## Granting Accessibility Permission
+
+SnapNuts needs Accessibility permission to move and resize windows. **This is a one-time setup.**
+
+### First Launch
+
+When you first open SnapNuts, a welcome guide will walk you through the setup:
+
+1. Click **"Open System Settings"** in the welcome window
+2. Find **SnapNuts** in the Accessibility list
+3. Toggle it **ON**
+4. Return to SnapNuts - it will detect the permission automatically
+
+### If You Skipped the Welcome Guide
+
+1. Open **System Settings** → **Privacy & Security** → **Accessibility**
+2. Click the **+** button if SnapNuts isn't listed
+3. Navigate to `/Applications/SnapNuts.app` and add it
+4. Toggle SnapNuts **ON**
+5. **Quit and relaunch SnapNuts** for changes to take effect
+
+### Troubleshooting
+
+| Issue | Solution |
+|:------|:---------|
+| "No focused window" error | Grant Accessibility permission and restart SnapNuts |
+| SnapNuts not in Accessibility list | Click + and manually add `/Applications/SnapNuts.app` |
+| Shortcuts not working | Make sure SnapNuts is toggled ON in Accessibility settings |
+| Menu bar shows ⚠️ icon | Permission not granted - click the icon to fix |
+
+> **Why does SnapNuts need this?** macOS requires apps to have explicit Accessibility permission to control other apps' windows. This is a security feature - SnapNuts only uses this to move and resize windows, nothing else.
 
 ---
 
@@ -204,6 +238,7 @@ snapnuts/
         ├── AlertWindow.swift
         ├── SettingsView.swift
         ├── ShortcutRecorder.swift
+        ├── OnboardingView.swift
         └── Info.plist
 ```
 

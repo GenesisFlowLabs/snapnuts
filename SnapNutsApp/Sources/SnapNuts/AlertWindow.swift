@@ -7,7 +7,9 @@ class AlertWindow {
     private var hideTimer: Timer?
 
     func showAlert(_ message: String, duration: TimeInterval = 0.5) {
-        DispatchQueue.main.async { [weak self] in
+        // Use asyncAfter with small delay to avoid SwiftUI/AppKit race conditions
+        // when called immediately after batch window operations
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
             self?.displayAlert(message, duration: duration)
         }
     }
@@ -19,10 +21,13 @@ class AlertWindow {
         // Get the screen with the focused window or main screen
         let targetScreen = getFocusedWindowScreen() ?? NSScreen.main ?? NSScreen.screens.first!
 
+        // Fixed window size to avoid dynamic resizing race conditions
+        let windowSize = NSSize(width: 400, height: 60)
+
         // Create or reuse window
         if window == nil {
             window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 300, height: 60),
+                contentRect: NSRect(x: 0, y: 0, width: windowSize.width, height: windowSize.height),
                 styleMask: [.borderless],
                 backing: .buffered,
                 defer: false
@@ -34,18 +39,15 @@ class AlertWindow {
             window?.ignoresMouseEvents = true
         }
 
-        // Create content view
+        // Create content view with fixed frame - avoid dynamic sizing
         let contentView = AlertContentView(message: message)
-        window?.contentView = NSHostingView(rootView: contentView)
-
-        // Size to fit content
-        let hostingView = window?.contentView as? NSHostingView<AlertContentView>
-        hostingView?.frame.size = hostingView?.fittingSize ?? NSSize(width: 300, height: 60)
-        window?.setContentSize(hostingView?.fittingSize ?? NSSize(width: 300, height: 60))
+        let hostingView = NSHostingView(rootView: contentView)
+        hostingView.frame = NSRect(origin: .zero, size: windowSize)
+        window?.contentView = hostingView
+        window?.setContentSize(windowSize)
 
         // Position at center-top of the target screen
         let screenFrame = targetScreen.frame
-        let windowSize = window?.frame.size ?? NSSize(width: 300, height: 60)
         let x = screenFrame.midX - windowSize.width / 2
         let y = screenFrame.maxY - windowSize.height - 100
 
@@ -106,14 +108,17 @@ class AlertWindow {
     }
 }
 
-/// SwiftUI view for alert content
+/// SwiftUI view for alert content - uses fixed frame to avoid layout race conditions
 struct AlertContentView: View {
     let message: String
 
     var body: some View {
+        // Use GeometryReader-free layout with fixed frame to prevent SwiftUI/AppKit conflicts
         Text(message)
             .font(.system(size: 18, weight: .medium, design: .rounded))
             .foregroundColor(.white)
+            .lineLimit(1)
+            .truncationMode(.tail)
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
             .background(
@@ -121,5 +126,6 @@ struct AlertContentView: View {
                     .fill(Color.black.opacity(0.75))
                     .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 4)
             )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

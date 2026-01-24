@@ -60,6 +60,8 @@ SnapNutsApp/
 | Cmd + 9 | Ninths | 3x3 grid |
 | Cmd + Opt + 4 | Sixteenths | 4x4 grid |
 
+**No numpad?** Use `Cmd + Ctrl + Number` instead (e.g., `Cmd + Ctrl + 3` for thirds).
+
 ### Building
 
 ```bash

@@ -103,8 +103,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func startPermissionMonitoring() {
         // Check permission status periodically to update UI
-        // Use longer interval (10s) to avoid excessive polling and potential race conditions
-        permissionCheckTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
+        // 2-second interval provides responsive feedback without excessive polling
+        permissionCheckTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
             self?.updateStatusBarIcon()
         }
     }

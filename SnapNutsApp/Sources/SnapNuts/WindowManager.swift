@@ -20,9 +20,9 @@ struct WindowPosition {
 class WindowManager {
     weak var alertWindow: AlertWindow?
 
-    // Position tracking for cycling
+    // Position tracking for cycling (per-key)
     private var currentPositionIndex: [String: Int] = [:]
-    private var currentScreenIndex: Int = 1
+    private var currentScreenIndex: [String: Int] = [:]
 
     // Position definitions (ported from Lua)
     let maximizePositions = [
@@ -122,17 +122,56 @@ class WindowManager {
         NSScreen.screens.sorted { $0.frame.origin.x < $1.frame.origin.x }
     }
 
-    /// Find which screen a window is on
-    func screenIndexForWindow(_ window: AXUIElement) -> Int {
-        guard let position = getWindowPosition(window) else { return 0 }
-        let screens = getSortedScreens()
+    /// Find which screen a window is currently on
+    func screenForWindow(_ window: AXUIElement) -> NSScreen {
+        guard let position = getWindowPosition(window),
+              let size = getWindowSize(window) else {
+            return NSScreen.main ?? NSScreen.screens[0]
+        }
 
-        for (index, screen) in screens.enumerated() {
-            if screen.frame.contains(CGPoint(x: position.x + 10, y: position.y + 10)) {
-                return index
+        // Window center in Accessibility coordinates
+        let centerX = position.x + size.width / 2
+        let centerY = position.y + size.height / 2
+
+        // Check each screen - need to convert AX coords to screen coords
+        // In AX: Y=0 is top of primary screen, increases downward
+        // In Cocoa: Y=0 is bottom of primary screen, increases upward
+        let primaryHeight = NSScreen.screens[0].frame.height
+        let cocoaCenterY = primaryHeight - centerY
+        let centerPoint = CGPoint(x: centerX, y: cocoaCenterY)
+
+        // Use getSortedScreens() for consistency with positioning logic
+        let sortedScreens = getSortedScreens()
+
+        // First try to find exact match
+        for screen in sortedScreens {
+            if screen.frame.contains(centerPoint) {
+                return screen
             }
         }
-        return 0
+
+        // If no exact match, find the nearest screen by distance to center
+        var nearestScreen = sortedScreens[0]
+        var nearestDistance = CGFloat.greatestFiniteMagnitude
+
+        for screen in sortedScreens {
+            let screenCenterX = screen.frame.midX
+            let screenCenterY = screen.frame.midY
+            let distance = hypot(centerPoint.x - screenCenterX, centerPoint.y - screenCenterY)
+            if distance < nearestDistance {
+                nearestDistance = distance
+                nearestScreen = screen
+            }
+        }
+
+        return nearestScreen
+    }
+
+    /// Find the index of the screen a window is on
+    func screenIndexForWindow(_ window: AXUIElement) -> Int {
+        let screen = screenForWindow(window)
+        let screens = getSortedScreens()
+        return screens.firstIndex(of: screen) ?? 0
     }
 
     // MARK: - Window Access
@@ -199,21 +238,42 @@ class WindowManager {
     /// Move window to a position on a specific screen
     func moveWindowToPosition(_ window: AXUIElement, position: WindowPosition, screen: NSScreen) {
         let frame = screen.visibleFrame
+        let primaryHeight = NSScreen.screens[0].frame.height
 
         // Calculate pixel boundaries using consistent rounding to eliminate gaps
-        // By calculating start and end positions separately, adjacent windows share exact boundaries
         let startX = round(frame.width * position.x)
         let endX = round(frame.width * (position.x + position.width))
         let startY = round(frame.height * position.y)
         let endY = round(frame.height * (position.y + position.height))
 
-        let newX = frame.origin.x + startX
-        let newY = frame.origin.y + frame.height - endY  // Flip Y coordinate (macOS origin is bottom-left)
         let newWidth = endX - startX
         let newHeight = endY - startY
 
+        // X coordinate: offset from left edge of visible frame
+        let newX = frame.origin.x + startX
+
+        // Y coordinate conversion:
+        // 1. Calculate where the window TOP should be in Cocoa coords
+        //    - Top of visible frame in Cocoa = frame.origin.y + frame.height
+        //    - Window top in Cocoa = top of frame - startY (going down from top)
+        let windowTopInCocoa = frame.origin.y + frame.height - startY
+
+        // 2. Convert Cocoa Y to Accessibility Y
+        //    - AX Y = primaryHeight - Cocoa Y
+        let newY = primaryHeight - windowTopInCocoa
+
+        // Step 1: Move window to target screen first
         setWindowPosition(window, position: CGPoint(x: newX, y: newY))
+
+        // Step 2: Small delay to let macOS register the screen change
+        // This is critical for cross-monitor moves
+        Thread.sleep(forTimeInterval: 0.05)
+
+        // Step 3: Now resize - macOS now knows the window is on the target screen
         setWindowSize(window, size: CGSize(width: newWidth, height: newHeight))
+
+        // Step 4: Set position again to ensure it's exact after resize
+        setWindowPosition(window, position: CGPoint(x: newX, y: newY))
     }
 
     // MARK: - Position Cycling
@@ -228,8 +288,9 @@ class WindowManager {
         let screens = getSortedScreens()
         let numScreens = screens.count
 
-        // Get current index for this key
+        // Get current position index for this key
         var index = currentPositionIndex[key] ?? 0
+        var screenIdx = currentScreenIndex[key] ?? (screenIndexForWindow(window) + 1)
         var wrapAround = false
 
         index += 1
@@ -241,16 +302,19 @@ class WindowManager {
 
         // Handle multi-monitor cycling
         if wrapAround && numScreens > 1 {
-            currentScreenIndex += 1
-            if currentScreenIndex > numScreens {
-                currentScreenIndex = 1
+            // Wrapped through all positions, move to next screen
+            screenIdx += 1
+            if screenIdx > numScreens {
+                screenIdx = 1
             }
-        } else if !wrapAround {
-            // Find current screen of window
-            currentScreenIndex = screenIndexForWindow(window) + 1
+        } else if index == 1 && !wrapAround {
+            // First use of this key - detect which screen window is on
+            screenIdx = screenIndexForWindow(window) + 1
         }
+        // Otherwise: keep using the same screen
+        currentScreenIndex[key] = screenIdx
 
-        let targetScreenIndex = min(currentScreenIndex - 1, screens.count - 1)
+        let targetScreenIndex = max(0, min(screenIdx - 1, screens.count - 1))
         let targetScreen = screens[targetScreenIndex]
         let pos = positions[index - 1]
 
@@ -264,7 +328,7 @@ class WindowManager {
             label = "\(index)/\(positions.count)"
         }
 
-        let screenInfo = numScreens > 1 ? " [\(currentScreenIndex)/\(numScreens)]" : ""
+        let screenInfo = numScreens > 1 ? " [\(screenIdx)/\(numScreens)]" : ""
         alertWindow?.showAlert("\(label)\(screenInfo)")
     }
 
@@ -313,8 +377,10 @@ class WindowManager {
 
         let screens = getSortedScreens()
         let numScreens = screens.count
+        let key = "ninths"
 
-        var index = currentPositionIndex["ninths"] ?? 0
+        var index = currentPositionIndex[key] ?? 0
+        var screenIdx = currentScreenIndex[key] ?? (screenIndexForWindow(window) + 1)
         var wrapAround = false
 
         index += 1
@@ -322,18 +388,19 @@ class WindowManager {
             index = 1
             wrapAround = true
         }
-        currentPositionIndex["ninths"] = index
+        currentPositionIndex[key] = index
 
         if wrapAround && numScreens > 1 {
-            currentScreenIndex += 1
-            if currentScreenIndex > numScreens {
-                currentScreenIndex = 1
+            screenIdx += 1
+            if screenIdx > numScreens {
+                screenIdx = 1
             }
-        } else if !wrapAround {
-            currentScreenIndex = screenIndexForWindow(window) + 1
+        } else if index == 1 && !wrapAround {
+            screenIdx = screenIndexForWindow(window) + 1
         }
+        currentScreenIndex[key] = screenIdx
 
-        let targetScreenIndex = min(currentScreenIndex - 1, screens.count - 1)
+        let targetScreenIndex = max(0, min(screenIdx - 1, screens.count - 1))
         let targetScreen = screens[targetScreenIndex]
         let pos = ninthPositions[index - 1]
 
@@ -341,7 +408,7 @@ class WindowManager {
 
         let row = ((index - 1) / 3) + 1
         let col = ((index - 1) % 3) + 1
-        let screenInfo = numScreens > 1 ? " [\(currentScreenIndex)/\(numScreens)]" : ""
+        let screenInfo = numScreens > 1 ? " [\(screenIdx)/\(numScreens)]" : ""
         alertWindow?.showAlert("Ninth \(index)/9 (R\(row) C\(col))\(screenInfo)")
     }
 
@@ -353,8 +420,10 @@ class WindowManager {
 
         let screens = getSortedScreens()
         let numScreens = screens.count
+        let key = "sixteenths"
 
-        var index = currentPositionIndex["sixteenths"] ?? 0
+        var index = currentPositionIndex[key] ?? 0
+        var screenIdx = currentScreenIndex[key] ?? (screenIndexForWindow(window) + 1)
         var wrapAround = false
 
         index += 1
@@ -362,18 +431,19 @@ class WindowManager {
             index = 1
             wrapAround = true
         }
-        currentPositionIndex["sixteenths"] = index
+        currentPositionIndex[key] = index
 
         if wrapAround && numScreens > 1 {
-            currentScreenIndex += 1
-            if currentScreenIndex > numScreens {
-                currentScreenIndex = 1
+            screenIdx += 1
+            if screenIdx > numScreens {
+                screenIdx = 1
             }
-        } else if !wrapAround {
-            currentScreenIndex = screenIndexForWindow(window) + 1
+        } else if index == 1 && !wrapAround {
+            screenIdx = screenIndexForWindow(window) + 1
         }
+        currentScreenIndex[key] = screenIdx
 
-        let targetScreenIndex = min(currentScreenIndex - 1, screens.count - 1)
+        let targetScreenIndex = max(0, min(screenIdx - 1, screens.count - 1))
         let targetScreen = screens[targetScreenIndex]
         let pos = sixteenthPositions[index - 1]
 
@@ -381,39 +451,80 @@ class WindowManager {
 
         let row = ((index - 1) / 4) + 1
         let col = ((index - 1) % 4) + 1
-        let screenInfo = numScreens > 1 ? " [\(currentScreenIndex)/\(numScreens)]" : ""
+        let screenInfo = numScreens > 1 ? " [\(screenIdx)/\(numScreens)]" : ""
         alertWindow?.showAlert("16ths: \(index)/16 (R\(row) C\(col))\(screenInfo)")
     }
 
     func tileAllWindows() {
-        // Get all visible windows
-        let options = CGWindowListOption(arrayLiteral: .excludeDesktopElements, .optionOnScreenOnly)
-        guard let windowList = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else {
+        // Get the frontmost app and tile all its windows
+        guard let frontmostApp = NSWorkspace.shared.frontmostApplication else {
+            alertWindow?.showAlert("No active app")
             return
         }
 
-        let mainScreen = NSScreen.main ?? NSScreen.screens.first!
-        let frame = mainScreen.visibleFrame
+        let appElement = AXUIElementCreateApplication(frontmostApp.processIdentifier)
 
-        // Filter to regular windows (layer 0)
-        let regularWindows = windowList.filter { window in
-            let layer = window[kCGWindowLayer as String] as? Int ?? -1
-            let alpha = window[kCGWindowAlpha as String] as? Float ?? 0
-            return layer == 0 && alpha > 0
+        // Get all windows of this app
+        var windowsRef: CFTypeRef?
+        let result = AXUIElementCopyAttributeValue(appElement, kAXWindowsAttribute as CFString, &windowsRef)
+
+        guard result == .success,
+              let windowsArray = windowsRef as? [AXUIElement],
+              !windowsArray.isEmpty else {
+            alertWindow?.showAlert("No windows to tile")
+            return
         }
 
-        let count = regularWindows.count
-        guard count > 0 else { return }
+        // Filter to visible, regular windows (exclude minimized, etc.)
+        let visibleWindows = windowsArray.filter { window in
+            var minimized: CFTypeRef?
+            AXUIElementCopyAttributeValue(window, kAXMinimizedAttribute as CFString, &minimized)
+            let isMinimized = (minimized as? Bool) ?? false
+            return !isMinimized
+        }
 
-        // Calculate grid
+        let count = visibleWindows.count
+        guard count > 0 else {
+            alertWindow?.showAlert("No visible windows")
+            return
+        }
+
+        // Get the screen where the first window is located
+        let targetScreen = screenForWindow(visibleWindows[0])
+
+        let frame = targetScreen.visibleFrame
+        let primaryHeight = NSScreen.screens[0].frame.height
+
+        // Calculate optimal grid layout
         let cols = Int(ceil(sqrt(Double(count))))
         let rows = Int(ceil(Double(count) / Double(cols)))
 
-        let windowWidth = frame.width / CGFloat(cols)
-        let windowHeight = frame.height / CGFloat(rows)
+        // Tile each window
+        for (index, window) in visibleWindows.enumerated() {
+            let col = index % cols
+            let row = index / cols
 
-        // We can't easily move arbitrary windows without their AXUIElement
-        // This is a simplified version - full implementation would need to enumerate app windows
-        alertWindow?.showAlert("Tile All: \(count) windows")
+            // Calculate position using same boundary math as other positions (no gaps)
+            let startX = round(frame.width * CGFloat(col) / CGFloat(cols))
+            let endX = round(frame.width * CGFloat(col + 1) / CGFloat(cols))
+            let startY = round(frame.height * CGFloat(row) / CGFloat(rows))
+
+            let newWidth = endX - startX
+            let newHeight = round(frame.height * CGFloat(row + 1) / CGFloat(rows)) - startY
+
+            // X coordinate: offset from left edge of visible frame
+            let newX = frame.origin.x + startX
+
+            // Y coordinate: same conversion as moveWindowToPosition
+            let windowTopInCocoa = frame.origin.y + frame.height - startY
+            let newY = primaryHeight - windowTopInCocoa
+
+            setWindowPosition(window, position: CGPoint(x: newX, y: newY))
+            setWindowSize(window, size: CGSize(width: newWidth, height: newHeight))
+        }
+
+        let appName = frontmostApp.localizedName ?? "App"
+        let gridDesc = cols == rows ? "\(cols)x\(rows)" : "\(cols)x\(rows)"
+        alertWindow?.showAlert("Tiled \(count) \(appName) windows (\(gridDesc))")
     }
 }

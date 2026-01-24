@@ -6,8 +6,8 @@ struct SettingsView: View {
     @AppStorage("alertDuration") private var alertDuration = 0.5
     @State private var hasAccessibility = AXIsProcessTrusted()
 
-    // Check permission less frequently to avoid race conditions
-    let timer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
+    // Check permission every 2 seconds for responsive feedback
+    let timer = Timer.publish(every: 2, on: .main, in: .common).autoconnect()
 
     var body: some View {
         VStack(spacing: 0) {
