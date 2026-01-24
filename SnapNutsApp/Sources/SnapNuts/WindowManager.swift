@@ -16,6 +16,13 @@ struct WindowPosition {
     }
 }
 
+/// Represents a window's previous position for undo
+struct WindowHistory {
+    let windowRef: AXUIElement
+    let pid: pid_t
+    let frame: CGRect
+}
+
 /// Manages window positioning and multi-monitor cycling
 class WindowManager {
     weak var alertWindow: AlertWindow?
@@ -23,6 +30,15 @@ class WindowManager {
     // Position tracking for cycling (per-key)
     private var currentPositionIndex: [String: Int] = [:]
     private var currentScreenIndex: [String: Int] = [:]
+
+    // Undo history (max 10 entries)
+    private var undoHistory: [WindowHistory] = []
+    private let maxUndoHistory = 10
+
+    // Window gaps (in pixels)
+    var windowGap: CGFloat {
+        CGFloat(UserDefaults.standard.integer(forKey: "windowGap"))
+    }
 
     // Position definitions (ported from Lua)
     let maximizePositions = [
@@ -235,10 +251,71 @@ class WindowManager {
         }
     }
 
+    // MARK: - Undo Support
+
+    /// Saves the current window position to undo history
+    private func saveToUndoHistory(_ window: AXUIElement) {
+        // Get current position and size
+        var positionValue: CFTypeRef?
+        var sizeValue: CFTypeRef?
+
+        guard AXUIElementCopyAttributeValue(window, kAXPositionAttribute as CFString, &positionValue) == .success,
+              AXUIElementCopyAttributeValue(window, kAXSizeAttribute as CFString, &sizeValue) == .success else {
+            return
+        }
+
+        var position = CGPoint.zero
+        var size = CGSize.zero
+
+        AXValueGetValue(positionValue as! AXValue, .cgPoint, &position)
+        AXValueGetValue(sizeValue as! AXValue, .cgSize, &size)
+
+        // Get PID for the window's app
+        var pid: pid_t = 0
+        AXUIElementGetPid(window, &pid)
+
+        let history = WindowHistory(
+            windowRef: window,
+            pid: pid,
+            frame: CGRect(origin: position, size: size)
+        )
+
+        // Add to history, limiting size
+        undoHistory.append(history)
+        if undoHistory.count > maxUndoHistory {
+            undoHistory.removeFirst()
+        }
+    }
+
+    /// Undoes the last snap operation
+    func undoLastSnap() {
+        guard let lastHistory = undoHistory.popLast() else {
+            alertWindow?.showAlert("Nothing to undo")
+            return
+        }
+
+        // Restore the previous position
+        var position = lastHistory.frame.origin
+        let positionValue = AXValueCreate(.cgPoint, &position)!
+        AXUIElementSetAttributeValue(lastHistory.windowRef, kAXPositionAttribute as CFString, positionValue)
+
+        Thread.sleep(forTimeInterval: 0.05)
+
+        var size = lastHistory.frame.size
+        let sizeValue = AXValueCreate(.cgSize, &size)!
+        AXUIElementSetAttributeValue(lastHistory.windowRef, kAXSizeAttribute as CFString, sizeValue)
+
+        alertWindow?.showAlert("Undone!")
+    }
+
     /// Move window to a position on a specific screen
     func moveWindowToPosition(_ window: AXUIElement, position: WindowPosition, screen: NSScreen) {
+        // Save current position for undo
+        saveToUndoHistory(window)
+
         let frame = screen.visibleFrame
         let primaryHeight = NSScreen.screens[0].frame.height
+        let gap = windowGap
 
         // Calculate pixel boundaries using consistent rounding to eliminate gaps
         let startX = round(frame.width * position.x)
@@ -246,17 +323,32 @@ class WindowManager {
         let startY = round(frame.height * position.y)
         let endY = round(frame.height * (position.y + position.height))
 
-        let newWidth = endX - startX
-        let newHeight = endY - startY
+        var newWidth = endX - startX
+        var newHeight = endY - startY
 
         // X coordinate: offset from left edge of visible frame
-        let newX = frame.origin.x + startX
+        var newX = frame.origin.x + startX
 
         // Y coordinate conversion:
         // 1. Calculate where the window TOP should be in Cocoa coords
         //    - Top of visible frame in Cocoa = frame.origin.y + frame.height
         //    - Window top in Cocoa = top of frame - startY (going down from top)
-        let windowTopInCocoa = frame.origin.y + frame.height - startY
+        var windowTopInCocoa = frame.origin.y + frame.height - startY
+
+        // Apply gaps if enabled
+        if gap > 0 {
+            // Add gap to position
+            newX += gap
+            windowTopInCocoa -= gap
+
+            // Reduce size to account for gaps
+            newWidth -= gap * 2
+            newHeight -= gap * 2
+
+            // Ensure minimum size
+            newWidth = max(newWidth, 100)
+            newHeight = max(newHeight, 100)
+        }
 
         // 2. Convert Cocoa Y to Accessibility Y
         //    - AX Y = primaryHeight - Cocoa Y
@@ -526,5 +618,67 @@ class WindowManager {
         let appName = frontmostApp.localizedName ?? "App"
         let gridDesc = cols == rows ? "\(cols)x\(rows)" : "\(cols)x\(rows)"
         alertWindow?.showAlert("Tiled \(count) \(appName) windows (\(gridDesc))")
+    }
+
+    // MARK: - Workspace Layout Methods
+
+    /// Restores a workspace layout by slot number (1-9)
+    func restoreWorkspace(slot: Int) {
+        if WorkspaceManager.shared.restoreLayoutBySlot(slot) {
+            if let layout = WorkspaceManager.shared.layoutForSlot(slot) {
+                alertWindow?.showAlert("Restored: \(layout.name)")
+            } else {
+                alertWindow?.showAlert("Workspace \(slot) restored")
+            }
+        } else {
+            alertWindow?.showAlert("No layout in slot \(slot)")
+        }
+    }
+
+    /// Shows a dialog to save the current workspace layout
+    func promptSaveWorkspace() {
+        DispatchQueue.main.async {
+            let alert = NSAlert()
+            alert.messageText = "Save Workspace Layout"
+            alert.informativeText = "Enter a name for this layout:"
+            alert.alertStyle = .informational
+
+            let textField = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 24))
+            textField.stringValue = "My Workspace"
+            alert.accessoryView = textField
+
+            alert.addButton(withTitle: "Save")
+            alert.addButton(withTitle: "Cancel")
+
+            // Add slot picker
+            let slotPicker = NSPopUpButton(frame: NSRect(x: 0, y: 30, width: 200, height: 24))
+            slotPicker.addItem(withTitle: "No shortcut")
+            for i in 1...9 {
+                let existingLayout = WorkspaceManager.shared.layoutForSlot(i)
+                if let layout = existingLayout {
+                    slotPicker.addItem(withTitle: "⌘⇧\(i) (replaces \(layout.name))")
+                } else {
+                    slotPicker.addItem(withTitle: "⌘⇧\(i)")
+                }
+            }
+
+            let containerView = NSStackView(frame: NSRect(x: 0, y: 0, width: 200, height: 60))
+            containerView.orientation = .vertical
+            containerView.spacing = 8
+            containerView.addArrangedSubview(textField)
+            containerView.addArrangedSubview(slotPicker)
+            alert.accessoryView = containerView
+
+            NSApp.activate(ignoringOtherApps: true)
+
+            if alert.runModal() == .alertFirstButtonReturn {
+                let name = textField.stringValue.isEmpty ? "Workspace" : textField.stringValue
+                let slotIndex = slotPicker.indexOfSelectedItem
+                let slot = slotIndex > 0 ? slotIndex : nil
+
+                WorkspaceManager.shared.saveCurrentLayout(name: name, shortcutSlot: slot)
+                self.alertWindow?.showAlert("Saved: \(name)")
+            }
+        }
     }
 }

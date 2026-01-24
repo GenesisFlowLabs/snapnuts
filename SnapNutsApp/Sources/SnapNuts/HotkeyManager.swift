@@ -100,6 +100,43 @@ class HotkeyManager {
         // Cmd+Ctrl+Option+4 for sixteenths fallback
         registerHotkey(actionKey: "sixteenths", keyCode: 21, modifiers: UInt32(cmdKey | controlKey | optionKey))
 
+        // Cmd+G for grid overlay
+        registerHotkey(actionKey: "gridOverlay", keyCode: 5, modifiers: UInt32(cmdKey))
+
+        // Cmd+Ctrl+G for grid overlay (fallback without numpad)
+        registerHotkey(actionKey: "gridOverlay", keyCode: 5, modifiers: UInt32(cmdKey | controlKey))
+
+        // Workspace Layout shortcuts: Cmd+Shift+1 through Cmd+Shift+9 to restore layouts
+        let workspaceKeyCodes: [(slot: Int, keyCode: UInt32)] = [
+            (1, 18),  // 1
+            (2, 19),  // 2
+            (3, 20),  // 3
+            (4, 21),  // 4
+            (5, 23),  // 5
+            (6, 22),  // 6
+            (7, 26),  // 7
+            (8, 28),  // 8
+            (9, 25)   // 9
+        ]
+
+        for (slot, keyCode) in workspaceKeyCodes {
+            registerHotkey(actionKey: "workspace\(slot)", keyCode: keyCode, modifiers: UInt32(cmdKey | shiftKey))
+        }
+
+        // Cmd+Shift+S to save current layout
+        registerHotkey(actionKey: "saveWorkspace", keyCode: 1, modifiers: UInt32(cmdKey | shiftKey))
+
+        // Window stashing shortcuts
+        // Cmd+Shift+Left Arrow (keyCode 123) to stash left
+        registerHotkey(actionKey: "stashLeft", keyCode: 123, modifiers: UInt32(cmdKey | shiftKey))
+        // Cmd+Shift+Right Arrow (keyCode 124) to stash right
+        registerHotkey(actionKey: "stashRight", keyCode: 124, modifiers: UInt32(cmdKey | shiftKey))
+        // Cmd+Shift+U to unstash all
+        registerHotkey(actionKey: "unstashAll", keyCode: 32, modifiers: UInt32(cmdKey | shiftKey))
+
+        // Cmd+Shift+Z to undo last snap
+        registerHotkey(actionKey: "undoSnap", keyCode: 6, modifiers: UInt32(cmdKey | shiftKey))
+
         print("SnapNuts: Hotkeys registered (custom shortcuts enabled)")
     }
 
@@ -151,6 +188,23 @@ class HotkeyManager {
                 self.windowManager.ninths()
             case "sixteenths":
                 self.windowManager.sixteenths()
+            case "gridOverlay":
+                self.windowManager.toggleGridOverlay()
+            case "saveWorkspace":
+                self.windowManager.promptSaveWorkspace()
+            case let action where action.hasPrefix("workspace"):
+                if let slotStr = action.dropFirst("workspace".count).first,
+                   let slot = Int(String(slotStr)) {
+                    self.windowManager.restoreWorkspace(slot: slot)
+                }
+            case "stashLeft":
+                WindowStashController.shared.stashFocusedWindow(to: .left)
+            case "stashRight":
+                WindowStashController.shared.stashFocusedWindow(to: .right)
+            case "unstashAll":
+                WindowStashController.shared.unstashAllWindows()
+            case "undoSnap":
+                self.windowManager.undoLastSnap()
             default:
                 break
             }

@@ -43,7 +43,11 @@ swiftc \
     "$SCRIPT_DIR/Sources/SnapNuts/AlertWindow.swift" \
     "$SCRIPT_DIR/Sources/SnapNuts/SettingsView.swift" \
     "$SCRIPT_DIR/Sources/SnapNuts/ShortcutRecorder.swift" \
-    "$SCRIPT_DIR/Sources/SnapNuts/OnboardingView.swift"
+    "$SCRIPT_DIR/Sources/SnapNuts/OnboardingView.swift" \
+    "$SCRIPT_DIR/Sources/SnapNuts/GridOverlay.swift" \
+    "$SCRIPT_DIR/Sources/SnapNuts/WorkspaceManager.swift" \
+    "$SCRIPT_DIR/Sources/SnapNuts/DragSnapController.swift" \
+    "$SCRIPT_DIR/Sources/SnapNuts/WindowStashController.swift"
 
 echo "Swift compilation complete."
 
@@ -100,4 +104,13 @@ echo ""
 echo "Build complete!"
 echo "App location: $APP_BUNDLE"
 echo ""
-echo "To run: open \"$APP_BUNDLE\""
+
+# Copy to /Applications for easier accessibility permission setup
+if [ -d "/Applications/SnapNuts.app" ]; then
+    echo "Updating /Applications/SnapNuts.app..."
+    rm -rf "/Applications/SnapNuts.app"
+fi
+cp -R "$APP_BUNDLE" "/Applications/"
+echo "Installed to: /Applications/SnapNuts.app"
+echo ""
+echo "To run: open /Applications/SnapNuts.app"

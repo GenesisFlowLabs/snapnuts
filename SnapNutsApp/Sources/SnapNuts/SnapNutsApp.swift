@@ -43,6 +43,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         alertWindow = AlertWindow()
         windowManager?.alertWindow = alertWindow
 
+        // Initialize grid overlay
+        GridOverlayController.shared.setWindowManager(windowManager!)
+
+        // Initialize drag-to-snap
+        DragSnapController.shared.setWindowManager(windowManager!)
+        DragSnapController.shared.start()
+
+        // Initialize window stashing
+        WindowStashController.shared.setWindowManager(windowManager!)
+
         // Setup menu bar
         setupStatusBar()
 
@@ -179,6 +189,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         shortcutsItem.submenu = createShortcutsMenu()
         menu.addItem(shortcutsItem)
 
+        // Grid Overlay
+        let gridItem = NSMenuItem(title: "Show Grid Overlay", action: #selector(showGridOverlay), keyEquivalent: "g")
+        gridItem.target = self
+        menu.addItem(gridItem)
+
+        // Workspaces submenu
+        let workspacesItem = NSMenuItem(title: "Workspaces", action: nil, keyEquivalent: "")
+        workspacesItem.submenu = createWorkspacesMenu()
+        menu.addItem(workspacesItem)
+
+        // Window Stashing submenu
+        let stashItem = NSMenuItem(title: "Stash Window", action: nil, keyEquivalent: "")
+        stashItem.submenu = createStashMenu()
+        menu.addItem(stashItem)
+
         menu.addItem(NSMenuItem.separator())
 
         // Settings
@@ -207,6 +232,106 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func showOnboardingFromMenu() {
         showOnboarding()
+    }
+
+    @objc func showGridOverlay() {
+        windowManager?.showGridOverlay()
+    }
+
+    func createWorkspacesMenu() -> NSMenu {
+        let menu = NSMenu()
+
+        // Save current layout
+        let saveItem = NSMenuItem(title: "Save Current Layout...", action: #selector(saveWorkspace), keyEquivalent: "S")
+        saveItem.keyEquivalentModifierMask = [.command, .shift]
+        saveItem.target = self
+        menu.addItem(saveItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        // List saved layouts
+        let layouts = WorkspaceManager.shared.layouts
+        if layouts.isEmpty {
+            let emptyItem = NSMenuItem(title: "No saved layouts", action: nil, keyEquivalent: "")
+            emptyItem.isEnabled = false
+            menu.addItem(emptyItem)
+        } else {
+            for layout in layouts {
+                var title = layout.name
+                if let slot = layout.shortcutSlot {
+                    title = "[\(slot)] \(layout.name)"
+                }
+
+                let item = NSMenuItem(title: title, action: #selector(restoreWorkspaceFromMenu(_:)), keyEquivalent: "")
+                item.target = self
+                item.representedObject = layout.id
+                menu.addItem(item)
+            }
+        }
+
+        menu.addItem(NSMenuItem.separator())
+
+        // Open settings to workspaces tab
+        let manageItem = NSMenuItem(title: "Manage Workspaces...", action: #selector(openSettings), keyEquivalent: "")
+        manageItem.target = self
+        menu.addItem(manageItem)
+
+        return menu
+    }
+
+    @objc func saveWorkspace() {
+        windowManager?.promptSaveWorkspace()
+    }
+
+    @objc func restoreWorkspaceFromMenu(_ sender: NSMenuItem) {
+        guard let layoutId = sender.representedObject as? UUID,
+              let layout = WorkspaceManager.shared.layouts.first(where: { $0.id == layoutId }) else { return }
+        _ = WorkspaceManager.shared.restoreLayout(layout)
+        alertWindow?.showAlert("Restored: \(layout.name)")
+    }
+
+    func createStashMenu() -> NSMenu {
+        let menu = NSMenu()
+
+        let stashLeftItem = NSMenuItem(title: "Stash to Left", action: #selector(stashLeft), keyEquivalent: "")
+        stashLeftItem.keyEquivalentModifierMask = [.command, .shift]
+        stashLeftItem.target = self
+        menu.addItem(stashLeftItem)
+
+        let stashRightItem = NSMenuItem(title: "Stash to Right", action: #selector(stashRight), keyEquivalent: "")
+        stashRightItem.keyEquivalentModifierMask = [.command, .shift]
+        stashRightItem.target = self
+        menu.addItem(stashRightItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        let unstashAllItem = NSMenuItem(title: "Unstash All Windows", action: #selector(unstashAll), keyEquivalent: "U")
+        unstashAllItem.keyEquivalentModifierMask = [.command, .shift]
+        unstashAllItem.target = self
+        menu.addItem(unstashAllItem)
+
+        // Show stashed windows count
+        let stashedCount = WindowStashController.shared.stashedWindowCount
+        if stashedCount > 0 {
+            menu.addItem(NSMenuItem.separator())
+            let countItem = NSMenuItem(title: "\(stashedCount) window(s) stashed", action: nil, keyEquivalent: "")
+            countItem.isEnabled = false
+            menu.addItem(countItem)
+        }
+
+        return menu
+    }
+
+    @objc func stashLeft() {
+        WindowStashController.shared.stashFocusedWindow(to: .left)
+    }
+
+    @objc func stashRight() {
+        WindowStashController.shared.stashFocusedWindow(to: .right)
+    }
+
+    @objc func unstashAll() {
+        WindowStashController.shared.unstashAllWindows()
     }
 
     func createShortcutsMenu() -> NSMenu {
