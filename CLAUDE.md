@@ -7,9 +7,9 @@ SnapNuts is a free, open source window management app for macOS. The core idea: 
 
 **GitHub (PUBLIC):** https://github.com/GenesisFlowLabs/snapnuts
 
-## Current State (Jan 7, 2026)
+## Current State (Jan 23, 2026)
 
-Native macOS app built with Swift/SwiftUI. Fully functional, publicly released.
+Native macOS app built with Swift/SwiftUI. Fully functional with advanced features including visual grid overlay, workspace layouts, drag-to-snap zones, and window stashing.
 
 ### Architecture
 
@@ -18,7 +18,9 @@ The app is a standalone native macOS menu bar application:
 ```
 SnapNutsApp/
 ├── Package.swift              # Swift Package Manager config
-├── build.sh                   # Build script
+├── build.sh                   # Build script (auto-installs to /Applications)
+├── Frameworks/
+│   └── Sparkle.framework      # Auto-update framework
 ├── Resources/
 │   ├── AppIcon.appiconset/    # App icons (all sizes)
 │   ├── StatusBarIcon.png      # Menu bar icon
@@ -30,6 +32,11 @@ SnapNutsApp/
     ├── SettingsView.swift     # SwiftUI settings UI with tabs
     ├── ShortcutRecorder.swift # "Learn" feature for custom shortcuts
     ├── AlertWindow.swift      # Visual feedback overlay
+    ├── OnboardingView.swift   # First-run welcome screen
+    ├── GridOverlay.swift      # Visual grid overlay for click-to-snap
+    ├── WorkspaceManager.swift # Save/restore window arrangements
+    ├── DragSnapController.swift    # Drag-to-edge snapping
+    ├── WindowStashController.swift # Hide windows at screen edges
     ├── Info.plist             # App metadata
     └── SnapNuts.entitlements  # Accessibility permissions
 ```
@@ -41,10 +48,14 @@ SnapNutsApp/
 | UI Framework | SwiftUI |
 | Window Management | AppKit + Accessibility API (AXUIElement) |
 | Hotkey Registration | Carbon Event Manager |
-| Settings Storage | UserDefaults |
-| Distribution | DMG installer |
+| Mouse Event Monitoring | CGEventTap (for drag-to-snap) |
+| Settings Storage | UserDefaults + JSON (for workspaces) |
+| Auto-Updates | Sparkle Framework |
+| Distribution | DMG installer, auto-install to /Applications |
 
 ### Shortcuts
+
+#### Window Divisions (the number = the division)
 
 | Shortcut | Division | Positions |
 |:--------:|:--------:|:----------|
@@ -62,13 +73,37 @@ SnapNutsApp/
 
 **No numpad?** Use `Cmd + Ctrl + Number` instead (e.g., `Cmd + Ctrl + 3` for thirds).
 
+#### Advanced Features
+
+| Shortcut | Action | Description |
+|:--------:|:------:|:------------|
+| Cmd + G | Grid Overlay | Shows visual grid, click to snap |
+| Cmd + Shift + S | Save Workspace | Save current window arrangement |
+| Cmd + Shift + 1-9 | Restore Workspace | Restore saved layout |
+| Cmd + Shift + ← | Stash Left | Hide window at left edge |
+| Cmd + Shift + → | Stash Right | Hide window at right edge |
+| Cmd + Shift + U | Unstash All | Reveal all stashed windows |
+| Cmd + Shift + Z | Undo | Undo last window snap (10 levels) |
+
 ### Building
 
 ```bash
 cd SnapNutsApp
 ./build.sh
-open build/SnapNuts.app
+# Automatically installs to /Applications/SnapNuts.app
+open /Applications/SnapNuts.app
 ```
+
+### Settings (General Tab)
+
+| Setting | Description |
+|---------|-------------|
+| Launch at Login | Start automatically when you log in |
+| Drag to Screen Edge | Snap windows by dragging to edges |
+| Window Stashing | Enable stash shortcuts (Cmd+Shift+←/→) |
+| Window Gap | Spacing between snapped windows (0-16px) |
+| Show Position Alerts | Display feedback when snapping |
+| Alert Duration | How long alerts are visible (0.2-2.0s) |
 
 ## Project History
 
@@ -86,6 +121,17 @@ open build/SnapNuts.app
 - Added SwiftUI settings UI with customizable shortcuts
 - Added "Learn" feature to record custom key combinations
 - Added visual feedback alerts
+
+### Phase 3: Advanced Features (Jan 23, 2026)
+- **AI Assistance:** Claude Opus 4.5 (Anthropic)
+- **Visual Grid Overlay** - Click-to-snap interface (Cmd+G)
+- **Workspace Layouts** - Save/restore window arrangements (Cmd+Shift+S, Cmd+Shift+1-9)
+- **Drag-to-Snap Zones** - Drag windows to screen edges with preview
+- **Window Stashing** - Hide windows at screen edges with hover-to-reveal
+- **Undo System** - 10-level undo history (Cmd+Shift+Z)
+- **Window Gaps** - Configurable spacing between windows (0-16px)
+- **Sparkle Auto-Updates** - Automatic update checking
+- Fixed multi-monitor window sizing issues
 
 ## AI Transparency
 
