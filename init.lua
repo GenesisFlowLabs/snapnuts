@@ -4,6 +4,9 @@
 -- This extends Rectangle's capabilities with custom cycling logic
 -- ⌘+Numpad 4 cycles through: 4 horizontal fourths + 4 corner quarters
 
+-- Enable IPC for command-line debugging
+require("hs.ipc")
+
 hs.alert.show("Hammerspoon: Rectangle Numpad System loaded")
 
 -- Disable all window animations for instant snapping
@@ -427,7 +430,297 @@ hs.hotkey.bind({"cmd"}, "pad9", function()
   hs.alert.show(string.format("Ninth %d/9 (R%d C%d)%s", currentNinthIndex, row, col, screenInfo), 0.5)
 end)
 
+-- ============================================================
+-- TILE ALL: ⌘+Pad* (numpad asterisk)
+-- Organize all windows of the CURRENT APP in a grid
+-- ============================================================
+
+hs.hotkey.bind({"cmd"}, "pad*", function()
+  -- Get the frontmost application
+  local app = hs.application.frontmostApplication()
+  if not app then
+    hs.alert.show("No active app", 0.5)
+    return
+  end
+
+  -- Get all windows of this app
+  local allWindows = app:allWindows()
+
+  -- Filter to visible, standard windows (exclude minimized, etc.)
+  local validWindows = {}
+  for _, win in ipairs(allWindows) do
+    if win:isStandard() and win:isVisible() and not win:isMinimized() then
+      table.insert(validWindows, win)
+    end
+  end
+
+  local count = #validWindows
+  if count == 0 then
+    hs.alert.show("No windows to tile", 0.5)
+    return
+  end
+
+  -- Get the screen of the first window
+  local screen = validWindows[1]:screen()
+  local f = screen:frame()
+
+  -- Gap between windows (pixels)
+  local gap = 4
+
+  -- Calculate grid dimensions
+  local cols, rows
+  if count == 1 then cols, rows = 1, 1
+  elseif count == 2 then cols, rows = 2, 1
+  elseif count <= 4 then cols, rows = 2, 2
+  elseif count <= 6 then cols, rows = 3, 2
+  elseif count <= 9 then cols, rows = 3, 3
+  else cols, rows = 4, 3 end
+
+  -- Calculate cell dimensions accounting for gaps
+  local cellWidth = (f.w - (gap * (cols + 1))) / cols
+  local cellHeight = (f.h - (gap * (rows + 1))) / rows
+
+  -- Position each window
+  for i, win in ipairs(validWindows) do
+    local row = math.ceil(i / cols)
+    local col = ((i - 1) % cols) + 1
+
+    win:setFrame({
+      x = f.x + gap + ((col - 1) * (cellWidth + gap)),
+      y = f.y + gap + ((row - 1) * (cellHeight + gap)),
+      w = cellWidth,
+      h = cellHeight
+    })
+  end
+
+  local appName = app:name() or "App"
+  hs.alert.show(string.format("Tiled %d %s windows (%dx%d)", count, appName, cols, rows), 0.5)
+end)
+
+-- ============================================================
+-- UNDO: ⌘+Shift+Z
+-- Restore previous window position (10 levels)
+-- ============================================================
+
+local undoHistory = {}
+local maxUndoHistory = 10
+
+-- Helper to record window state before moving
+local function recordSnapshot(win)
+  if not win then return end
+  local snapshot = {
+    window = win,
+    frame = win:frame()
+  }
+  table.insert(undoHistory, snapshot)
+  if #undoHistory > maxUndoHistory then
+    table.remove(undoHistory, 1)
+  end
+end
+
+-- Hook into moveToPosition to save snapshots
+local originalMoveToPosition = moveToPosition
+moveToPosition = function(positions, index, wrapAround)
+  local win = hs.window.focusedWindow()
+  if win then
+    recordSnapshot(win)
+  end
+  return originalMoveToPosition(positions, index, wrapAround)
+end
+
+hs.hotkey.bind({"cmd", "shift"}, "z", function()
+  if #undoHistory == 0 then
+    hs.alert.show("Nothing to undo", 0.5)
+    return
+  end
+
+  local snapshot = table.remove(undoHistory)
+  if snapshot.window and snapshot.window:isVisible() then
+    snapshot.window:setFrame(snapshot.frame)
+    hs.alert.show("Undone!", 0.5)
+  else
+    hs.alert.show("Window no longer exists", 0.5)
+  end
+end)
+
+-- ============================================================
+-- WORKSPACES: Save/Restore window layouts
+-- ⌘+Shift+S: Save current layout
+-- ⌘+Shift+1-9: Restore saved layout
+-- ============================================================
+
+local workspaces = {}
+
+local function saveWorkspace(slot)
+  local windows = hs.window.visibleWindows()
+  local data = {}
+
+  for _, win in ipairs(windows) do
+    if win:isStandard() and win:application() then
+      table.insert(data, {
+        appName = win:application():name(),
+        windowTitle = win:title(),
+        frame = {
+          x = win:frame().x,
+          y = win:frame().y,
+          w = win:frame().w,
+          h = win:frame().h
+        },
+        screenId = win:screen():id()
+      })
+    end
+  end
+
+  workspaces[slot] = data
+  hs.alert.show("Workspace " .. slot .. " saved (" .. #data .. " windows)", 0.5)
+end
+
+local function restoreWorkspace(slot)
+  local data = workspaces[slot]
+  if not data then
+    hs.alert.show("No workspace in slot " .. slot, 0.5)
+    return
+  end
+
+  local restored = 0
+  for _, winData in ipairs(data) do
+    -- Find matching window by app name
+    local app = hs.application.get(winData.appName)
+    if app then
+      local windows = app:allWindows()
+      for _, win in ipairs(windows) do
+        -- Match by title if possible, otherwise use first window
+        if win:title() == winData.windowTitle or #windows == 1 then
+          win:setFrame({
+            x = winData.frame.x,
+            y = winData.frame.y,
+            w = winData.frame.w,
+            h = winData.frame.h
+          })
+          restored = restored + 1
+          break
+        end
+      end
+    end
+  end
+
+  hs.alert.show("Workspace " .. slot .. " restored (" .. restored .. "/" .. #data .. " windows)", 0.5)
+end
+
+-- ⌘+Shift+S: Prompt for slot and save
+hs.hotkey.bind({"cmd", "shift"}, "s", function()
+  -- Use a simple chooser to pick slot
+  local choices = {}
+  for i = 1, 9 do
+    local status = workspaces[i] and ("(" .. #workspaces[i] .. " windows)") or "(empty)"
+    table.insert(choices, {
+      text = "Slot " .. i .. " " .. status,
+      slot = i
+    })
+  end
+
+  local chooser = hs.chooser.new(function(choice)
+    if choice then
+      saveWorkspace(choice.slot)
+    end
+  end)
+  chooser:choices(choices)
+  chooser:placeholderText("Select slot to save workspace")
+  chooser:show()
+end)
+
+-- ⌘+Shift+1 through ⌘+Shift+9: Restore workspaces
+for i = 1, 9 do
+  hs.hotkey.bind({"cmd", "shift"}, tostring(i), function()
+    restoreWorkspace(i)
+  end)
+end
+
+-- ============================================================
+-- WINDOW STASHING: Hide windows at screen edges
+-- ⌘+Shift+Left: Stash left
+-- ⌘+Shift+Right: Stash right
+-- ⌘+Shift+U: Unstash all
+-- ============================================================
+
+local stashedWindows = {}
+
+local function stashWindow(side)
+  local win = hs.window.focusedWindow()
+  if not win then
+    hs.alert.show("No focused window", 0.5)
+    return
+  end
+
+  local screen = win:screen()
+  local f = screen:frame()
+  local stashWidth = 15  -- Pixels visible when stashed
+
+  -- Save original frame
+  table.insert(stashedWindows, {
+    side = side,
+    window = win,
+    originalFrame = win:frame()
+  })
+
+  -- Move window mostly off-screen
+  local stashFrame
+  if side == "left" then
+    stashFrame = {
+      x = f.x - win:frame().w + stashWidth,
+      y = win:frame().y,
+      w = win:frame().w,
+      h = win:frame().h
+    }
+  else  -- right
+    stashFrame = {
+      x = f.x + f.w - stashWidth,
+      y = win:frame().y,
+      w = win:frame().w,
+      h = win:frame().h
+    }
+  end
+
+  win:setFrame(stashFrame)
+  hs.alert.show("Stashed " .. side, 0.5)
+end
+
+local function unstashAll()
+  if #stashedWindows == 0 then
+    hs.alert.show("No stashed windows", 0.5)
+    return
+  end
+
+  local count = 0
+  for _, stash in ipairs(stashedWindows) do
+    if stash.window and stash.window:isVisible() then
+      stash.window:setFrame(stash.originalFrame)
+      count = count + 1
+    end
+  end
+
+  stashedWindows = {}
+  hs.alert.show("Unstashed " .. count .. " windows", 0.5)
+end
+
+hs.hotkey.bind({"cmd", "shift"}, "left", function()
+  stashWindow("left")
+end)
+
+hs.hotkey.bind({"cmd", "shift"}, "right", function()
+  stashWindow("right")
+end)
+
+hs.hotkey.bind({"cmd", "shift"}, "u", function()
+  unstashAll()
+end)
+
+-- ============================================================
+-- STARTUP MESSAGE
+-- ============================================================
+
 print("SnapNuts: Full numpad system with multi-monitor cycling")
+print("  ⌘+0: Tile All Windows")
 print("  ⌘+1: Maximize (cycles monitors)")
 print("  ⌘+2: Halves (2 positions)")
 print("  ⌘+3: Thirds (3 positions)")
@@ -438,3 +731,8 @@ print("  ⌘+7: Almost Maximize (cycles monitors)")
 print("  ⌘+8: Eighths (8 positions)")
 print("  ⌘+9: Ninths (9 positions)")
 print("  ⌘+Option+4: Sixteenths (16 positions)")
+print("  ⌘+Shift+Z: Undo last snap")
+print("  ⌘+Shift+S: Save workspace")
+print("  ⌘+Shift+1-9: Restore workspace")
+print("  ⌘+Shift+←/→: Stash window")
+print("  ⌘+Shift+U: Unstash all")
