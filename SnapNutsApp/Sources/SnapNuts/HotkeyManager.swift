@@ -40,7 +40,23 @@ class HotkeyManager {
         registerHotkeys()
     }
 
+    private func debugLog(_ message: String) {
+        let logPath = NSHomeDirectory() + "/Desktop/snapnuts-debug.log"
+        let timestamp = ISO8601DateFormatter().string(from: Date())
+        let logMessage = "[\(timestamp)] \(message)\n"
+        if let handle = FileHandle(forWritingAtPath: logPath) {
+            handle.seekToEndOfFile()
+            handle.write(logMessage.data(using: .utf8)!)
+            handle.closeFile()
+        } else {
+            FileManager.default.createFile(atPath: logPath, contents: logMessage.data(using: .utf8))
+        }
+        print(message)
+    }
+
     func registerHotkeys() {
+        debugLog("registerHotkeys() called - AXIsProcessTrusted: \(AXIsProcessTrusted())")
+
         // Install event handler if not already installed
         if eventHandler == nil {
             var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
@@ -79,8 +95,8 @@ class HotkeyManager {
             }
         }
 
-        // Also register fallback Cmd+Ctrl+Number shortcuts for keyboards without numpad
-        let fallbackShortcuts: [(action: String, keyCode: UInt32)] = [
+        // Also register regular number keys for users without numpads (Cmd+Number)
+        let regularKeyShortcuts: [(action: String, keyCode: UInt32)] = [
             ("tileAll", 29),   // 0
             ("maximize", 18),  // 1
             ("halves", 19),    // 2
@@ -93,12 +109,12 @@ class HotkeyManager {
             ("ninths", 25)     // 9
         ]
 
-        for (action, keyCode) in fallbackShortcuts {
-            registerHotkey(actionKey: action, keyCode: keyCode, modifiers: UInt32(cmdKey | controlKey))
+        for (action, keyCode) in regularKeyShortcuts {
+            registerHotkey(actionKey: action, keyCode: keyCode, modifiers: UInt32(cmdKey))
         }
 
-        // Cmd+Ctrl+Option+4 for sixteenths fallback
-        registerHotkey(actionKey: "sixteenths", keyCode: 21, modifiers: UInt32(cmdKey | controlKey | optionKey))
+        // Cmd+Option+4 for sixteenths on regular keyboard
+        registerHotkey(actionKey: "sixteenths", keyCode: 21, modifiers: UInt32(cmdKey | optionKey))
 
         // Cmd+G for grid overlay
         registerHotkey(actionKey: "gridOverlay", keyCode: 5, modifiers: UInt32(cmdKey))
@@ -137,7 +153,8 @@ class HotkeyManager {
         // Cmd+Shift+Z to undo last snap
         registerHotkey(actionKey: "undoSnap", keyCode: 6, modifiers: UInt32(cmdKey | shiftKey))
 
-        print("SnapNuts: Hotkeys registered (custom shortcuts enabled)")
+        let permissionStatus = AXIsProcessTrusted() ? "granted" : "NOT GRANTED"
+        print("SnapNuts: Hotkeys registered (custom shortcuts enabled) - Accessibility: \(permissionStatus)")
     }
 
     private func registerHotkey(actionKey: String, keyCode: UInt32, modifiers: UInt32) {
@@ -152,18 +169,21 @@ class HotkeyManager {
         if status == noErr {
             hotkeyRefs.append(hotkeyRef)
             hotkeyActions[hotkeyID] = actionKey
+            debugLog("  ✓ Registered hotkey \(actionKey) (id=\(hotkeyID), keyCode=\(keyCode))")
         } else {
-            // Silently fail for conflicts (e.g., duplicate registrations)
-            if status != -9878 { // paramErr for already registered
-                print("Failed to register hotkey for \(actionKey): \(status)")
-            }
+            debugLog("  ✗ FAILED to register hotkey \(actionKey): error \(status)")
         }
     }
 
     func handleHotkey(id: UInt32) {
+        debugLog("handleHotkey triggered: id=\(id)")
         DispatchQueue.main.async { [weak self] in
             guard let self = self,
-                  let actionKey = self.hotkeyActions[id] else { return }
+                  let actionKey = self.hotkeyActions[id] else {
+                self?.debugLog("  No action found for hotkey id \(id)")
+                return
+            }
+            self.debugLog("  Executing action: \(actionKey)")
 
             switch actionKey {
             case "tileAll":

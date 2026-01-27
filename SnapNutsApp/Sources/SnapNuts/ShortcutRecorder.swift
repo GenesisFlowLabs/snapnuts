@@ -65,18 +65,20 @@ struct KeyboardShortcut: Codable, Equatable {
         return "Key \(code)"
     }
 
+    // Numpad key codes (for users with numpads)
+    // 82=Num0, 83=Num1, 84=Num2, 85=Num3, 86=Num4, 87=Num5, 88=Num6, 89=Num7, 91=Num8, 92=Num9
     static let defaultShortcuts: [String: KeyboardShortcut] = [
-        "tileAll": KeyboardShortcut(keyCode: 82, modifiers: UInt32(cmdKey)),
-        "maximize": KeyboardShortcut(keyCode: 83, modifiers: UInt32(cmdKey)),
-        "halves": KeyboardShortcut(keyCode: 84, modifiers: UInt32(cmdKey)),
-        "thirds": KeyboardShortcut(keyCode: 85, modifiers: UInt32(cmdKey)),
-        "fourths": KeyboardShortcut(keyCode: 86, modifiers: UInt32(cmdKey)),
-        "center": KeyboardShortcut(keyCode: 87, modifiers: UInt32(cmdKey)),
-        "sixths": KeyboardShortcut(keyCode: 88, modifiers: UInt32(cmdKey)),
-        "almostMax": KeyboardShortcut(keyCode: 89, modifiers: UInt32(cmdKey)),
-        "eighths": KeyboardShortcut(keyCode: 91, modifiers: UInt32(cmdKey)),
-        "ninths": KeyboardShortcut(keyCode: 92, modifiers: UInt32(cmdKey)),
-        "sixteenths": KeyboardShortcut(keyCode: 86, modifiers: UInt32(cmdKey | optionKey))
+        "tileAll": KeyboardShortcut(keyCode: 82, modifiers: UInt32(cmdKey)),    // Cmd+Num0
+        "maximize": KeyboardShortcut(keyCode: 83, modifiers: UInt32(cmdKey)),   // Cmd+Num1
+        "halves": KeyboardShortcut(keyCode: 84, modifiers: UInt32(cmdKey)),     // Cmd+Num2
+        "thirds": KeyboardShortcut(keyCode: 85, modifiers: UInt32(cmdKey)),     // Cmd+Num3
+        "fourths": KeyboardShortcut(keyCode: 86, modifiers: UInt32(cmdKey)),    // Cmd+Num4
+        "center": KeyboardShortcut(keyCode: 87, modifiers: UInt32(cmdKey)),     // Cmd+Num5
+        "sixths": KeyboardShortcut(keyCode: 88, modifiers: UInt32(cmdKey)),     // Cmd+Num6
+        "almostMax": KeyboardShortcut(keyCode: 89, modifiers: UInt32(cmdKey)),  // Cmd+Num7
+        "eighths": KeyboardShortcut(keyCode: 91, modifiers: UInt32(cmdKey)),    // Cmd+Num8
+        "ninths": KeyboardShortcut(keyCode: 92, modifiers: UInt32(cmdKey)),     // Cmd+Num9
+        "sixteenths": KeyboardShortcut(keyCode: 86, modifiers: UInt32(cmdKey | optionKey))  // Cmd+Opt+Num4
     ]
 }
 

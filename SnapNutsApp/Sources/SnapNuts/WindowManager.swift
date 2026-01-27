@@ -27,6 +27,19 @@ struct WindowHistory {
 class WindowManager {
     weak var alertWindow: AlertWindow?
 
+    private func debugLog(_ message: String) {
+        let logPath = NSHomeDirectory() + "/Desktop/snapnuts-debug.log"
+        let timestamp = ISO8601DateFormatter().string(from: Date())
+        let logMessage = "[\(timestamp)] [WM] \(message)\n"
+        if let handle = FileHandle(forWritingAtPath: logPath) {
+            handle.seekToEndOfFile()
+            handle.write(logMessage.data(using: .utf8)!)
+            handle.closeFile()
+        } else {
+            FileManager.default.createFile(atPath: logPath, contents: logMessage.data(using: .utf8))
+        }
+    }
+
     // Position tracking for cycling (per-key)
     private var currentPositionIndex: [String: Int] = [:]
     private var currentScreenIndex: [String: Int] = [:]
@@ -317,6 +330,11 @@ class WindowManager {
         let primaryHeight = NSScreen.screens[0].frame.height
         let gap = windowGap
 
+        debugLog("moveWindowToPosition called:")
+        debugLog("  position: x=\(position.x), y=\(position.y), w=\(position.width), h=\(position.height)")
+        debugLog("  screen.visibleFrame: \(frame)")
+        debugLog("  primaryHeight: \(primaryHeight)")
+
         // Calculate pixel boundaries using consistent rounding to eliminate gaps
         let startX = round(frame.width * position.x)
         let endX = round(frame.width * (position.x + position.width))
@@ -354,6 +372,8 @@ class WindowManager {
         //    - AX Y = primaryHeight - Cocoa Y
         let newY = primaryHeight - windowTopInCocoa
 
+        debugLog("  Final: x=\(newX), y=\(newY), w=\(newWidth), h=\(newHeight)")
+
         // Step 1: Move window to target screen first
         setWindowPosition(window, position: CGPoint(x: newX, y: newY))
 
@@ -370,7 +390,7 @@ class WindowManager {
 
     // MARK: - Position Cycling
 
-    /// Cycle to next position with multi-monitor support
+    /// Cycle to next position on CURRENT screen (no automatic monitor jumping)
     func cyclePosition(key: String, positions: [WindowPosition], labels: [String]? = nil) {
         guard let window = getFocusedWindow() else {
             alertWindow?.showAlert("No focused window!")
@@ -380,36 +400,22 @@ class WindowManager {
         let screens = getSortedScreens()
         let numScreens = screens.count
 
-        // Get current position index for this key
-        var index = currentPositionIndex[key] ?? 0
-        var screenIdx = currentScreenIndex[key] ?? (screenIndexForWindow(window) + 1)
-        var wrapAround = false
+        // Always detect which screen the window is currently on
+        let currentScreenIdx = screenIndexForWindow(window)
+        let targetScreen = screens[currentScreenIdx]
 
+        // Get current position index for this key on this screen
+        let stateKey = "\(key)_screen\(currentScreenIdx)"
+        var index = currentPositionIndex[stateKey] ?? 0
+
+        // Cycle to next position
         index += 1
         if index > positions.count {
-            index = 1
-            wrapAround = true
+            index = 1  // Wrap back to first position (stay on same screen)
         }
-        currentPositionIndex[key] = index
+        currentPositionIndex[stateKey] = index
 
-        // Handle multi-monitor cycling
-        if wrapAround && numScreens > 1 {
-            // Wrapped through all positions, move to next screen
-            screenIdx += 1
-            if screenIdx > numScreens {
-                screenIdx = 1
-            }
-        } else if index == 1 && !wrapAround {
-            // First use of this key - detect which screen window is on
-            screenIdx = screenIndexForWindow(window) + 1
-        }
-        // Otherwise: keep using the same screen
-        currentScreenIndex[key] = screenIdx
-
-        let targetScreenIndex = max(0, min(screenIdx - 1, screens.count - 1))
-        let targetScreen = screens[targetScreenIndex]
         let pos = positions[index - 1]
-
         moveWindowToPosition(window, position: pos, screen: targetScreen)
 
         // Show feedback
@@ -420,7 +426,7 @@ class WindowManager {
             label = "\(index)/\(positions.count)"
         }
 
-        let screenInfo = numScreens > 1 ? " [\(screenIdx)/\(numScreens)]" : ""
+        let screenInfo = numScreens > 1 ? " [Screen \(currentScreenIdx + 1)/\(numScreens)]" : ""
         alertWindow?.showAlert("\(label)\(screenInfo)")
     }
 
@@ -469,38 +475,28 @@ class WindowManager {
 
         let screens = getSortedScreens()
         let numScreens = screens.count
-        let key = "ninths"
 
-        var index = currentPositionIndex[key] ?? 0
-        var screenIdx = currentScreenIndex[key] ?? (screenIndexForWindow(window) + 1)
-        var wrapAround = false
+        // Always detect which screen the window is currently on
+        let currentScreenIdx = screenIndexForWindow(window)
+        let targetScreen = screens[currentScreenIdx]
 
+        // Get current position index for this key on this screen
+        let stateKey = "ninths_screen\(currentScreenIdx)"
+        var index = currentPositionIndex[stateKey] ?? 0
+
+        // Cycle to next position
         index += 1
         if index > ninthPositions.count {
-            index = 1
-            wrapAround = true
+            index = 1  // Wrap back to first position (stay on same screen)
         }
-        currentPositionIndex[key] = index
+        currentPositionIndex[stateKey] = index
 
-        if wrapAround && numScreens > 1 {
-            screenIdx += 1
-            if screenIdx > numScreens {
-                screenIdx = 1
-            }
-        } else if index == 1 && !wrapAround {
-            screenIdx = screenIndexForWindow(window) + 1
-        }
-        currentScreenIndex[key] = screenIdx
-
-        let targetScreenIndex = max(0, min(screenIdx - 1, screens.count - 1))
-        let targetScreen = screens[targetScreenIndex]
         let pos = ninthPositions[index - 1]
-
         moveWindowToPosition(window, position: pos, screen: targetScreen)
 
         let row = ((index - 1) / 3) + 1
         let col = ((index - 1) % 3) + 1
-        let screenInfo = numScreens > 1 ? " [\(screenIdx)/\(numScreens)]" : ""
+        let screenInfo = numScreens > 1 ? " [Screen \(currentScreenIdx + 1)/\(numScreens)]" : ""
         alertWindow?.showAlert("Ninth \(index)/9 (R\(row) C\(col))\(screenInfo)")
     }
 
@@ -512,38 +508,28 @@ class WindowManager {
 
         let screens = getSortedScreens()
         let numScreens = screens.count
-        let key = "sixteenths"
 
-        var index = currentPositionIndex[key] ?? 0
-        var screenIdx = currentScreenIndex[key] ?? (screenIndexForWindow(window) + 1)
-        var wrapAround = false
+        // Always detect which screen the window is currently on
+        let currentScreenIdx = screenIndexForWindow(window)
+        let targetScreen = screens[currentScreenIdx]
 
+        // Get current position index for this key on this screen
+        let stateKey = "sixteenths_screen\(currentScreenIdx)"
+        var index = currentPositionIndex[stateKey] ?? 0
+
+        // Cycle to next position
         index += 1
         if index > sixteenthPositions.count {
-            index = 1
-            wrapAround = true
+            index = 1  // Wrap back to first position (stay on same screen)
         }
-        currentPositionIndex[key] = index
+        currentPositionIndex[stateKey] = index
 
-        if wrapAround && numScreens > 1 {
-            screenIdx += 1
-            if screenIdx > numScreens {
-                screenIdx = 1
-            }
-        } else if index == 1 && !wrapAround {
-            screenIdx = screenIndexForWindow(window) + 1
-        }
-        currentScreenIndex[key] = screenIdx
-
-        let targetScreenIndex = max(0, min(screenIdx - 1, screens.count - 1))
-        let targetScreen = screens[targetScreenIndex]
         let pos = sixteenthPositions[index - 1]
-
         moveWindowToPosition(window, position: pos, screen: targetScreen)
 
         let row = ((index - 1) / 4) + 1
         let col = ((index - 1) % 4) + 1
-        let screenInfo = numScreens > 1 ? " [\(screenIdx)/\(numScreens)]" : ""
+        let screenInfo = numScreens > 1 ? " [Screen \(currentScreenIdx + 1)/\(numScreens)]" : ""
         alertWindow?.showAlert("16ths: \(index)/16 (R\(row) C\(col))\(screenInfo)")
     }
 

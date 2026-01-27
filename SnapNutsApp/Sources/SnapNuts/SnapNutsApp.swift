@@ -24,6 +24,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var settingsWindow: NSWindow?
     var onboardingWindow: NSWindow?
     var permissionCheckTimer: Timer?
+    var lastPermissionState: Bool = false
 
     // Sparkle updater controller
     var updaterController: SPUStandardUpdaterController!
@@ -112,10 +113,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func startPermissionMonitoring() {
-        // Check permission status periodically to update UI
+        // Track initial state
+        lastPermissionState = AXIsProcessTrusted()
+
+        // Check permission status periodically to update UI and re-register hotkeys if needed
         // 2-second interval provides responsive feedback without excessive polling
         permissionCheckTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
-            self?.updateStatusBarIcon()
+            guard let self = self else { return }
+
+            let currentPermission = AXIsProcessTrusted()
+
+            // If permission was just granted, re-register hotkeys
+            if currentPermission && !self.lastPermissionState {
+                print("SnapNuts: Accessibility permission granted - re-registering hotkeys")
+                self.hotkeyManager?.unregisterHotkeys()
+                self.hotkeyManager?.registerHotkeys()
+            }
+
+            self.lastPermissionState = currentPermission
+            self.updateStatusBarIcon()
         }
     }
 

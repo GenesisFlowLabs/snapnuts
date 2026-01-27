@@ -44,6 +44,10 @@ class DragSnapController {
         }
     }
 
+    deinit {
+        stop()
+    }
+
     func setWindowManager(_ manager: WindowManager) {
         self.windowManager = manager
     }
@@ -299,7 +303,12 @@ class DragSnapController {
     // MARK: - Preview Window
 
     private func showPreview(for zone: SnapZone, on screen: NSScreen) {
-        hidePreview()
+        // Close existing preview window directly (not async) to avoid race conditions
+        if let existingWindow = previewWindow {
+            previewWindow = nil
+            existingWindow.orderOut(nil)
+            existingWindow.close()
+        }
 
         let frame = screen.visibleFrame
         let position = zone.position
@@ -364,14 +373,21 @@ class DragSnapController {
     private func hidePreview() {
         guard let window = previewWindow else { return }
 
+        // Clear reference FIRST to prevent re-entrancy issues
+        // The local variable keeps window alive for the animation
+        previewWindow = nil
+
+        // Use a strong reference in completion to ensure window stays alive
         NSAnimationContext.runAnimationGroup({ context in
             context.duration = 0.1
             window.animator().alphaValue = 0
-        }, completionHandler: {
-            window.close()
+        }, completionHandler: { [window] in
+            // Ensure we're on main thread and window is still valid
+            DispatchQueue.main.async {
+                window.orderOut(nil)
+                window.close()
+            }
         })
-
-        previewWindow = nil
     }
 
     // MARK: - Window Snapping
