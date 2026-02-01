@@ -716,23 +716,223 @@ hs.hotkey.bind({"cmd", "shift"}, "u", function()
 end)
 
 -- ============================================================
+-- LAPTOP FALLBACK: ⌘+Ctrl+Numbers (no numpad needed)
+-- ============================================================
+
+-- ⌘+Ctrl+0: Tile All
+hs.hotkey.bind({"cmd", "ctrl"}, "0", function()
+  local app = hs.application.frontmostApplication()
+  if not app then
+    hs.alert.show("No active app", 0.5)
+    return
+  end
+
+  local allWindows = app:allWindows()
+  local validWindows = {}
+  for _, win in ipairs(allWindows) do
+    if win:isStandard() and win:isVisible() and not win:isMinimized() then
+      table.insert(validWindows, win)
+    end
+  end
+
+  local count = #validWindows
+  if count == 0 then
+    hs.alert.show("No windows to tile", 0.5)
+    return
+  end
+
+  local screen = validWindows[1]:screen()
+  local f = screen:frame()
+  local gap = 4
+
+  local cols, rows
+  if count == 1 then cols, rows = 1, 1
+  elseif count == 2 then cols, rows = 2, 1
+  elseif count <= 4 then cols, rows = 2, 2
+  elseif count <= 6 then cols, rows = 3, 2
+  elseif count <= 9 then cols, rows = 3, 3
+  else cols, rows = 4, 3 end
+
+  local cellWidth = (f.w - (gap * (cols + 1))) / cols
+  local cellHeight = (f.h - (gap * (rows + 1))) / rows
+
+  for i, win in ipairs(validWindows) do
+    local row = math.ceil(i / cols)
+    local col = ((i - 1) % cols) + 1
+    win:setFrame({
+      x = f.x + gap + ((col - 1) * (cellWidth + gap)),
+      y = f.y + gap + ((row - 1) * (cellHeight + gap)),
+      w = cellWidth,
+      h = cellHeight
+    })
+  end
+
+  hs.alert.show(string.format("Tiled %d %s windows (%dx%d)", count, app:name() or "App", cols, rows), 0.5)
+end)
+
+-- ⌘+Ctrl+1: Maximize
+hs.hotkey.bind({"cmd", "ctrl"}, "1", function()
+  local wrapAround = false
+  currentMaximizeIndex = currentMaximizeIndex + 1
+  if currentMaximizeIndex > #maximizePositions then
+    currentMaximizeIndex = 1
+    wrapAround = true
+  end
+  moveToPosition(maximizePositions, currentMaximizeIndex, wrapAround)
+  local screens = getSortedScreens()
+  local screenInfo = " [" .. currentScreenIndex .. "/" .. #screens .. "]"
+  hs.alert.show("Maximize" .. screenInfo, 0.5)
+end)
+
+-- ⌘+Ctrl+2: Halves
+hs.hotkey.bind({"cmd", "ctrl"}, "2", function()
+  local wrapAround = false
+  currentHalfIndex = currentHalfIndex + 1
+  if currentHalfIndex > #halfPositions then
+    currentHalfIndex = 1
+    wrapAround = true
+  end
+  moveToPosition(halfPositions, currentHalfIndex, wrapAround)
+  local labels = {"Left", "Right"}
+  local screens = getSortedScreens()
+  local screenInfo = " [" .. currentScreenIndex .. "/" .. #screens .. "]"
+  hs.alert.show("Half " .. labels[currentHalfIndex] .. screenInfo, 0.5)
+end)
+
+-- ⌘+Ctrl+3: Thirds
+hs.hotkey.bind({"cmd", "ctrl"}, "3", function()
+  local wrapAround = false
+  currentThirdIndex = currentThirdIndex + 1
+  if currentThirdIndex > #thirdPositions then
+    currentThirdIndex = 1
+    wrapAround = true
+  end
+  moveToPosition(thirdPositions, currentThirdIndex, wrapAround)
+  local labels = {"Left", "Center", "Right"}
+  local screens = getSortedScreens()
+  local screenInfo = " [" .. currentScreenIndex .. "/" .. #screens .. "]"
+  hs.alert.show("Third " .. labels[currentThirdIndex] .. screenInfo, 0.5)
+end)
+
+-- ⌘+Ctrl+4: Fourths + Corners
+hs.hotkey.bind({"cmd", "ctrl"}, "4", function()
+  local wrapAround = false
+  currentFourIndex = currentFourIndex + 1
+  if currentFourIndex > #fourPositions then
+    currentFourIndex = 1
+    wrapAround = true
+  end
+  moveToPosition(fourPositions, currentFourIndex, wrapAround)
+  local labels = {
+    "Fourth 1/4", "Fourth 2/4", "Fourth 3/4", "Fourth 4/4",
+    "Corner TL", "Corner TR", "Corner BL", "Corner BR"
+  }
+  local screens = getSortedScreens()
+  local screenInfo = " [" .. currentScreenIndex .. "/" .. #screens .. "]"
+  hs.alert.show(labels[currentFourIndex] .. screenInfo, 0.5)
+end)
+
+-- ⌘+Ctrl+5: Center
+hs.hotkey.bind({"cmd", "ctrl"}, "5", function()
+  local wrapAround = false
+  currentCenterIndex = currentCenterIndex + 1
+  if currentCenterIndex > #centerPositions then
+    currentCenterIndex = 1
+    wrapAround = true
+  end
+  moveToPosition(centerPositions, currentCenterIndex, wrapAround)
+  local screens = getSortedScreens()
+  local screenInfo = " [" .. currentScreenIndex .. "/" .. #screens .. "]"
+  hs.alert.show("Center" .. screenInfo, 0.5)
+end)
+
+-- ⌘+Ctrl+6: Sixths
+hs.hotkey.bind({"cmd", "ctrl"}, "6", function()
+  local wrapAround = false
+  currentSixthIndex = currentSixthIndex + 1
+  if currentSixthIndex > #sixthPositions then
+    currentSixthIndex = 1
+    wrapAround = true
+  end
+  moveToPosition(sixthPositions, currentSixthIndex, wrapAround)
+  local screens = getSortedScreens()
+  local screenInfo = " [" .. currentScreenIndex .. "/" .. #screens .. "]"
+  hs.alert.show("Sixth " .. currentSixthIndex .. "/6" .. screenInfo, 0.5)
+end)
+
+-- ⌘+Ctrl+7: Almost Max
+hs.hotkey.bind({"cmd", "ctrl"}, "7", function()
+  local wrapAround = false
+  currentAlmostMaxIndex = currentAlmostMaxIndex + 1
+  if currentAlmostMaxIndex > #almostMaxPositions then
+    currentAlmostMaxIndex = 1
+    wrapAround = true
+  end
+  moveToPosition(almostMaxPositions, currentAlmostMaxIndex, wrapAround)
+  local screens = getSortedScreens()
+  local screenInfo = " [" .. currentScreenIndex .. "/" .. #screens .. "]"
+  hs.alert.show("Almost Max" .. screenInfo, 0.5)
+end)
+
+-- ⌘+Ctrl+8: Eighths
+hs.hotkey.bind({"cmd", "ctrl"}, "8", function()
+  local wrapAround = false
+  currentEighthIndex = currentEighthIndex + 1
+  if currentEighthIndex > #eighthPositions then
+    currentEighthIndex = 1
+    wrapAround = true
+  end
+  moveToPosition(eighthPositions, currentEighthIndex, wrapAround)
+  local screens = getSortedScreens()
+  local screenInfo = " [" .. currentScreenIndex .. "/" .. #screens .. "]"
+  hs.alert.show("Eighth " .. currentEighthIndex .. "/8" .. screenInfo, 0.5)
+end)
+
+-- ⌘+Ctrl+9: Ninths
+hs.hotkey.bind({"cmd", "ctrl"}, "9", function()
+  local wrapAround = false
+  currentNinthIndex = currentNinthIndex + 1
+  if currentNinthIndex > #ninthPositions then
+    currentNinthIndex = 1
+    wrapAround = true
+  end
+  moveToPosition(ninthPositions, currentNinthIndex, wrapAround)
+  local row = math.ceil(currentNinthIndex / 3)
+  local col = ((currentNinthIndex - 1) % 3) + 1
+  local screens = getSortedScreens()
+  local screenInfo = " [" .. currentScreenIndex .. "/" .. #screens .. "]"
+  hs.alert.show(string.format("Ninth %d/9 (R%d C%d)%s", currentNinthIndex, row, col, screenInfo), 0.5)
+end)
+
+-- ⌘+Ctrl+Option+4: Sixteenths
+hs.hotkey.bind({"cmd", "ctrl", "alt"}, "4", function()
+  local wrapAround = false
+  currentSixteenIndex = currentSixteenIndex + 1
+  if currentSixteenIndex > #sixteenPositions then
+    currentSixteenIndex = 1
+    wrapAround = true
+  end
+  moveToPosition(sixteenPositions, currentSixteenIndex, wrapAround)
+  local row = math.ceil(currentSixteenIndex / 4)
+  local col = ((currentSixteenIndex - 1) % 4) + 1
+  local screens = getSortedScreens()
+  local screenInfo = ""
+  if #screens > 1 then
+    screenInfo = " [" .. currentScreenIndex .. "/" .. #screens .. "]"
+  end
+  hs.alert.show(string.format("16ths: %d/16 (R%d C%d)%s", currentSixteenIndex, row, col, screenInfo), 0.5)
+end)
+
+-- ============================================================
 -- STARTUP MESSAGE
 -- ============================================================
 
 print("SnapNuts: Full numpad system with multi-monitor cycling")
-print("  ⌘+0: Tile All Windows")
-print("  ⌘+1: Maximize (cycles monitors)")
-print("  ⌘+2: Halves (2 positions)")
-print("  ⌘+3: Thirds (3 positions)")
-print("  ⌘+4: Fourths + Corners (8 positions)")
-print("  ⌘+5: Center (cycles monitors)")
-print("  ⌘+6: Sixths (6 positions)")
-print("  ⌘+7: Almost Maximize (cycles monitors)")
-print("  ⌘+8: Eighths (8 positions)")
-print("  ⌘+9: Ninths (9 positions)")
-print("  ⌘+Option+4: Sixteenths (16 positions)")
-print("  ⌘+Shift+Z: Undo last snap")
-print("  ⌘+Shift+S: Save workspace")
+print("  NUMPAD: ⌘+pad0-9  |  LAPTOP: ⌘+Ctrl+0-9")
+print("  0: Tile All | 1: Maximize | 2: Halves | 3: Thirds")
+print("  4: Fourths+Corners | 5: Center | 6: Sixths")
+print("  7: Almost Max | 8: Eighths | 9: Ninths")
+print("  ⌘+Option+4 / ⌘+Ctrl+Option+4: Sixteenths (16 positions)")
+print("  ⌘+Shift+Z: Undo | ⌘+Shift+S: Save workspace")
 print("  ⌘+Shift+1-9: Restore workspace")
-print("  ⌘+Shift+←/→: Stash window")
-print("  ⌘+Shift+U: Unstash all")
+print("  ⌘+Shift+←/→: Stash | ⌘+Shift+U: Unstash all")
