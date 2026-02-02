@@ -208,11 +208,25 @@ When you first open SnapNuts, a welcome guide will walk you through the setup:
 
 ---
 
-## No Numpad?
+## No Numpad? No Problem.
 
-SnapNuts registers fallback shortcuts for keyboards without a numpad:
+MacBook keyboards don't have a numpad. SnapNuts includes **laptop fallback shortcuts** using `Cmd + Ctrl + Number`:
 
-**Cmd + Ctrl + Number** works the same as **Cmd + Numpad**
+| Numpad | Laptop | Action |
+|:------:|:------:|:-------|
+| Cmd + pad0 | Cmd + Ctrl + 0 | Tile All |
+| Cmd + pad1 | Cmd + Ctrl + 1 | Maximize |
+| Cmd + pad2 | Cmd + Ctrl + 2 | Halves |
+| Cmd + pad3 | Cmd + Ctrl + 3 | Thirds |
+| Cmd + pad4 | Cmd + Ctrl + 4 | Fourths + Corners |
+| Cmd + pad5 | Cmd + Ctrl + 5 | Center |
+| Cmd + pad6 | Cmd + Ctrl + 6 | Sixths |
+| Cmd + pad7 | Cmd + Ctrl + 7 | Almost Max |
+| Cmd + pad8 | Cmd + Ctrl + 8 | Eighths |
+| Cmd + pad9 | Cmd + Ctrl + 9 | Ninths |
+| Cmd + Opt + pad4 | Cmd + Ctrl + Opt + 4 | Sixteenths |
+
+Both shortcut sets are always active - use whichever fits your keyboard
 
 ---
 

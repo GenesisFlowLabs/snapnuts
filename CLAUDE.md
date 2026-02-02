@@ -6,7 +6,7 @@ SnapNuts is a free, open source window management tool for macOS. The core idea:
 **Project Location:** `/Users/shafenkhan/projects/snapnuts/`
 **GitHub (PUBLIC):** https://github.com/GenesisFlowLabs/snapnuts
 
-## Current State (Jan 25, 2026)
+## Current State (Feb 1, 2026)
 
 ### STATUS: PAUSED - Using Hammerspoon
 
@@ -16,19 +16,42 @@ Swift app development paused due to accessibility permission hassles with ad-hoc
 
 ### What's Working (Hammerspoon)
 
+**Numpad (external keyboard):**
+
 | Shortcut | Action |
 |----------|--------|
-| Cmd+0 | Tile All (current app windows) |
-| Cmd+1 | Maximize |
-| Cmd+2 | Halves (left/right) |
-| Cmd+3 | Thirds |
-| Cmd+4 | Fourths + Corners (8 positions) |
-| Cmd+5 | Center (80%) |
-| Cmd+6 | Sixths (3x2 grid) |
-| Cmd+7 | Almost Max (90%) |
-| Cmd+8 | Eighths (4x2 grid) |
-| Cmd+9 | Ninths (3x3 grid) |
-| Cmd+Opt+4 | Sixteenths (4x4 grid) |
+| Cmd+pad0 | Tile All (current app windows) |
+| Cmd+pad1 | Maximize |
+| Cmd+pad2 | Halves (left/right) |
+| Cmd+pad3 | Thirds |
+| Cmd+pad4 | Fourths + Corners (8 positions) |
+| Cmd+pad5 | Center (80%) |
+| Cmd+pad6 | Sixths (3x2 grid) |
+| Cmd+pad7 | Almost Max (90%) |
+| Cmd+pad8 | Eighths (4x2 grid) |
+| Cmd+pad9 | Ninths (3x3 grid) |
+| Cmd+Opt+pad4 | Sixteenths (4x4 grid) |
+
+**Laptop fallback (no numpad):**
+
+| Shortcut | Action |
+|----------|--------|
+| Cmd+Ctrl+0 | Tile All (current app windows) |
+| Cmd+Ctrl+1 | Maximize |
+| Cmd+Ctrl+2 | Halves (left/right) |
+| Cmd+Ctrl+3 | Thirds |
+| Cmd+Ctrl+4 | Fourths + Corners (8 positions) |
+| Cmd+Ctrl+5 | Center (80%) |
+| Cmd+Ctrl+6 | Sixths (3x2 grid) |
+| Cmd+Ctrl+7 | Almost Max (90%) |
+| Cmd+Ctrl+8 | Eighths (4x2 grid) |
+| Cmd+Ctrl+9 | Ninths (3x3 grid) |
+| Cmd+Ctrl+Opt+4 | Sixteenths (4x4 grid) |
+
+**Utilities (both keyboards):**
+
+| Shortcut | Action |
+|----------|--------|
 | Cmd+Shift+Z | Undo last snap (10 levels) |
 | Cmd+Shift+S | Save workspace |
 | Cmd+Shift+1-9 | Restore workspace |
@@ -76,6 +99,7 @@ The Swift app code is preserved but development is paused:
 - **Jan 7, 2026**: Converted to Swift app
 - **Jan 23, 2026**: Added advanced features
 - **Jan 25, 2026**: Fixed Swift bugs, updated Hammerspoon with all features, **paused Swift development**
+- **Feb 1, 2026**: Added laptop fallback shortcuts (Cmd+Ctrl+numbers) for MacBooks without numpad
 
 ## Credits
 
