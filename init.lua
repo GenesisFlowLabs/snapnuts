@@ -255,8 +255,10 @@ end)
 -- ============================================================
 
 local halfPositions = {
-  {x = 0,   y = 0, w = 0.5, h = 1},  -- 1: Left half
-  {x = 0.5, y = 0, w = 0.5, h = 1},  -- 2: Right half
+  {x = 0,   y = 0, w = 0.5, h = 1},    -- 1: Left half
+  {x = 0.5, y = 0, w = 0.5, h = 1},    -- 2: Right half
+  {x = 0,   y = 0, w = 1,   h = 0.5},  -- 3: Top half (horizontal split)
+  {x = 0,   y = 0.5, w = 1, h = 0.5},  -- 4: Bottom half (horizontal split)
 }
 
 local currentHalfIndex = 0
@@ -271,7 +273,7 @@ hs.hotkey.bind({"cmd"}, "pad2", function()
 
   moveToPosition(halfPositions, currentHalfIndex, wrapAround)
 
-  local labels = {"Left", "Right"}
+  local labels = {"Left", "Right", "Top", "Bottom"}
   local screens = getSortedScreens()
   local screenInfo = " [" .. currentScreenIndex .. "/" .. #screens .. "]"
   hs.alert.show("Half " .. labels[currentHalfIndex] .. screenInfo, 0.5)
@@ -793,7 +795,7 @@ hs.hotkey.bind({"cmd", "ctrl"}, "2", function()
     wrapAround = true
   end
   moveToPosition(halfPositions, currentHalfIndex, wrapAround)
-  local labels = {"Left", "Right"}
+  local labels = {"Left", "Right", "Top", "Bottom"}
   local screens = getSortedScreens()
   local screenInfo = " [" .. currentScreenIndex .. "/" .. #screens .. "]"
   hs.alert.show("Half " .. labels[currentHalfIndex] .. screenInfo, 0.5)
