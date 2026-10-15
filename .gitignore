@@ -4,3 +4,10 @@ SnapNuts-1.0.0.dmg
 PRD.md
 MARKETING.md
 FUTURE-ROADMAP.md
+
+# OS and build noise
+.DS_Store
+SnapNutsApp/.build/
+
+# The product page is its own repo (snapnuts-website)
+website/
