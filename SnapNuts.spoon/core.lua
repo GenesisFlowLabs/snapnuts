@@ -59,4 +59,33 @@ function core.frameFor(pos, sf, gap)
   }
 end
 
+-- Index of the position whose frame the window currently occupies
+-- (all four edges within tol pixels), or nil if it is in none.
+function core.matchPosition(positions, sf, gap, frame, tol)
+  for i, pos in ipairs(positions) do
+    local f = core.frameFor(pos, sf, gap)
+    if math.abs(f.x - frame.x) <= tol
+      and math.abs(f.y - frame.y) <= tol
+      and math.abs(f.w - frame.w) <= tol
+      and math.abs(f.h - frame.h) <= tol then
+      return i
+    end
+  end
+  return nil
+end
+
+-- Where the next press goes. n = cells in the division, current = the cell
+-- the window is in now (nil = none), screenIndex/numScreens = where it is.
+-- Returns index, screenIndex. After the last cell, the window moves to cell 1
+-- on the next screen (wrapping), which on one screen means it stays.
+function core.nextStep(n, current, screenIndex, numScreens)
+  if current == nil then
+    return 1, screenIndex
+  end
+  if current < n then
+    return current + 1, screenIndex
+  end
+  return 1, (screenIndex % numScreens) + 1
+end
+
 return core

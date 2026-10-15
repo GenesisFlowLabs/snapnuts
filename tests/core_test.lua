@@ -142,5 +142,76 @@ test("gap leaves a full margin at the screen edge and one gap between neighbours
 end)
 
 -- ------------------------------------------------------------
+-- matchPosition(positions, sf, gap, frame, tol): which cell is the window in?
+-- ------------------------------------------------------------
+
+test("matchPosition finds the cell a window exactly occupies", function()
+  local sf = {x = 0, y = 25, w = 1920, h = 1049}
+  local g = core.grid(3, 1)
+  local f = core.frameFor(g[2], sf, 0)
+  assertEq(core.matchPosition(g, sf, 0, f, 16), 2, "index")
+end)
+
+test("matchPosition returns nil for a frame that is no cell", function()
+  local sf = {x = 0, y = 25, w = 1920, h = 1049}
+  local g = core.grid(3, 1)
+  assertEq(core.matchPosition(g, sf, 0, {x = 300, y = 200, w = 700, h = 500}, 16), nil, "index")
+end)
+
+test("matchPosition tolerates small deviations but not large ones", function()
+  local sf = {x = 0, y = 25, w = 1920, h = 1049}
+  local g = core.grid(4, 2)
+  local f = core.frameFor(g[6], sf, 0)
+  local close = {x = f.x + 5, y = f.y - 3, w = f.w - 9, h = f.h + 2}
+  local far = {x = f.x + 40, y = f.y, w = f.w, h = f.h}
+  assertEq(core.matchPosition(g, sf, 0, close, 16), 6, "close")
+  assertEq(core.matchPosition(g, sf, 0, far, 16), nil, "far")
+end)
+
+test("matchPosition prefers the first cell when two sets share a corner", function()
+  -- Fourths = 4 strips + 4 quarters. A left strip and the TL quarter share (0,0).
+  local sf = {x = 0, y = 0, w = 1920, h = 1049}
+  local positions = core.concat(core.grid(4, 1), core.grid(2, 2))
+  local strip = core.frameFor(positions[1], sf, 0)
+  local quarter = core.frameFor(positions[5], sf, 0)
+  assertEq(core.matchPosition(positions, sf, 0, strip, 16), 1, "strip")
+  assertEq(core.matchPosition(positions, sf, 0, quarter, 16), 5, "quarter")
+end)
+
+-- ------------------------------------------------------------
+-- nextStep(n, current, screenIndex, numScreens) -> index, screenIndex
+-- ------------------------------------------------------------
+
+test("nextStep starts at 1 on the same screen when the window is in no cell", function()
+  local i, s = core.nextStep(3, nil, 2, 3)
+  assertEq(i, 1, "index"); assertEq(s, 2, "screen")
+end)
+
+test("nextStep advances one cell on the same screen", function()
+  local i, s = core.nextStep(3, 1, 2, 3)
+  assertEq(i, 2, "index"); assertEq(s, 2, "screen")
+end)
+
+test("nextStep hops to the next screen after the last cell", function()
+  local i, s = core.nextStep(3, 3, 2, 3)
+  assertEq(i, 1, "index"); assertEq(s, 3, "screen")
+end)
+
+test("nextStep wraps from the last screen to the first", function()
+  local i, s = core.nextStep(3, 3, 3, 3)
+  assertEq(i, 1, "index"); assertEq(s, 1, "screen")
+end)
+
+test("nextStep on a single-cell division cycles screens", function()
+  local i, s = core.nextStep(1, 1, 1, 2)
+  assertEq(i, 1, "index"); assertEq(s, 2, "screen")
+end)
+
+test("nextStep on one screen stays put at the end of a single-cell division", function()
+  local i, s = core.nextStep(1, 1, 1, 1)
+  assertEq(i, 1, "index"); assertEq(s, 1, "screen")
+end)
+
+-- ------------------------------------------------------------
 print(string.format("%d passed, %d failed", passed, failed))
 os.exit(failed == 0 and 0 or 1)
