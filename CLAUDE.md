@@ -1,105 +1,62 @@
 # SnapNuts
 
 ## Quick Context
-SnapNuts is a free, open source window management tool for macOS. The core idea: **the number = the division**. Press Cmd+4 for fourths, Cmd+8 for eighths. The shortcut teaches itself.
+SnapNuts is a free, open source window manager for macOS. The core idea: **the number = the division**. Press Cmd+4 for fourths, Cmd+8 for eighths. The shortcut teaches itself.
 
-**Project Location:** `/Users/shafenkhan/projects/snapnuts/`
-**GitHub (PUBLIC):** https://github.com/GenesisFlowLabs/snapnuts
+**Project Location:** `~/projects/tools/snapnuts/`
+**GitHub (PUBLIC):** https://github.com/GenesisFlowLabs/snapnuts (mirror: git.unicorncommander.ai/GenesisFlowLabs/snapnuts)
 
-## Current State (Feb 1, 2026)
+## Current State (2026-10-15)
 
-### STATUS: PAUSED - Using Hammerspoon
-
-Swift app development paused due to accessibility permission hassles with ad-hoc signing. Now using **Hammerspoon version** with all features.
-
-**Active config:** `~/.hammerspoon/init.lua` (copied from `init.lua` in this repo)
-
-### What's Working (Hammerspoon)
-
-**Numpad (external keyboard):**
-
-| Shortcut | Action |
-|----------|--------|
-| Cmd+pad0 | Tile All (current app windows) |
-| Cmd+pad1 | Maximize |
-| Cmd+pad2 | Halves (left/right) |
-| Cmd+pad3 | Thirds |
-| Cmd+pad4 | Fourths + Corners (8 positions) |
-| Cmd+pad5 | Center (80%) |
-| Cmd+pad6 | Sixths (3x2 grid) |
-| Cmd+pad7 | Almost Max (90%) |
-| Cmd+pad8 | Eighths (4x2 grid) |
-| Cmd+pad9 | Ninths (3x3 grid) |
-| Cmd+Opt+pad4 | Sixteenths (4x4 grid) |
-
-**Laptop fallback (no numpad):**
-
-| Shortcut | Action |
-|----------|--------|
-| Cmd+Ctrl+0 | Tile All (current app windows) |
-| Cmd+Ctrl+1 | Maximize |
-| Cmd+Ctrl+2 | Halves (left/right) |
-| Cmd+Ctrl+3 | Thirds |
-| Cmd+Ctrl+4 | Fourths + Corners (8 positions) |
-| Cmd+Ctrl+5 | Center (80%) |
-| Cmd+Ctrl+6 | Sixths (3x2 grid) |
-| Cmd+Ctrl+7 | Almost Max (90%) |
-| Cmd+Ctrl+8 | Eighths (4x2 grid) |
-| Cmd+Ctrl+9 | Ninths (3x3 grid) |
-| Cmd+Ctrl+Opt+4 | Sixteenths (4x4 grid) |
-
-**Utilities (both keyboards):**
-
-| Shortcut | Action |
-|----------|--------|
-| Cmd+Shift+Z | Undo last snap (10 levels) |
-| Cmd+Shift+S | Save workspace |
-| Cmd+Shift+1-9 | Restore workspace |
-| Cmd+Shift+Left | Stash window left |
-| Cmd+Shift+Right | Stash window right |
-| Cmd+Shift+U | Unstash all |
-
-### Swift-Only Features (NOT in Hammerspoon)
-
-- Cmd+G Grid Overlay (visual click-to-snap)
-- Drag-to-snap zones
-- Window gaps setting
-- Settings UI
-
-## Installation
-
-```bash
-# One-time: install Hammerspoon
-brew install --cask hammerspoon
-
-# Install/update SnapNuts
-cp /Users/shafenkhan/projects/snapnuts/init.lua ~/.hammerspoon/init.lua
-# Then: Hammerspoon menu bar → Reload Config
-```
-
-## Key Files
+### STATUS: 2.0.0, a Hammerspoon Spoon. Live on this Mac.
 
 | File | Purpose |
 |------|---------|
-| `init.lua` | **THE PRODUCT** - Hammerspoon config |
-| `SnapNutsApp/` | Swift app (paused) |
-| `PROJECT-STATUS.md` | Detailed status |
-| `NEXT_STEPS.md` | What's next |
+| `SnapNuts.spoon/init.lua` | **THE PRODUCT**: hotkeys, windows, undo, workspaces, stash |
+| `SnapNuts.spoon/core.lua` | Pure geometry, no `hs.*`. Grid, frames, matching, orientation, tiling |
+| `tests/core_test.lua` | 30 unit tests, `lua tests/core_test.lua` |
+| `tests/hs_test.lua` | 23-check integration suite, runs inside Hammerspoon (below) |
+| `install.sh` | Symlinks the Spoon into `~/.hammerspoon/Spoons/`, adds the two loader lines |
+| `init.lua.example` | What a user's own `init.lua` needs |
+| `SnapNutsApp/` | Swift app, paused since 2026-01-25 (code signing) |
+| `website/` | Product page, its own repo (snapnuts-website), ignored here. Describes the Swift app |
+
+**On this Mac:** `~/.hammerspoon/Spoons/SnapNuts.spoon` is a **symlink to this repo**, so an edit here is live after Reload Config, and the repo can never drift from the installed copy again. `~/.hammerspoon/init.lua` holds the two loader lines plus Shafen's macro-pad bindings (F18/F19), which are personal and not part of the product. Backups: `~/.hammerspoon/init.lua.bak-2026-10-07` (last 1.x), `.bak-2026-10-15` (just before 2.0).
+
+### How to verify a change
+
+```bash
+lua tests/core_test.lua
+hs -c 'hs.reload()'; sleep 2
+hs -t 90 -c 'dofile(os.getenv("HOME") .. "/projects/tools/snapnuts/tests/hs_test.lua")'
+```
+
+The integration suite moves the Hammerspoon console window around for a few seconds and puts it back. Default `hs` CLI timeout is 4 s, hence `-t`. Do not poll `hs -c` in a tight loop while a long command runs: hs.ipc refuses re-entrant requests and floods the console.
+
+### Shortcut map (2.0)
+
+Divisions: Cmd+pad0-9 / Cmd+Ctrl+0-9. Sixteenths: Cmd+Opt+pad4 / Cmd+Ctrl+Opt+4. Tile all apps: Cmd+Opt+pad0 / Cmd+Ctrl+Opt+0.
+Utilities: undo Cmd+pad- / Cmd+Ctrl+Z; save Cmd+pad+ / Cmd+Ctrl+S; restore list Cmd+pad/ / Cmd+Ctrl+W; restore slot N Cmd+Shift+padN (numpad only); stash Cmd+Ctrl+Shift+Left/Right; unstash Cmd+Ctrl+Shift+U.
+
+⛔ **Never bind Cmd+Shift+anything on the main keyboard.** 1.x did, and it took Redo, Save As, select-to-line-end and the macOS screenshot keys from every app for nine months. Cmd+Ctrl+Shift+3/4 are also taken (screenshot to clipboard). Ctrl+Opt+1-3 are registered by something else on this Mac (owner unknown, not a macOS symbolic hotkey).
+
+### Known macOS quirks handled in `setFrameOn`
+- An app may refuse a frame on a screen the window is not on yet: move it there first.
+- A secondary display refuses to shrink a full-height window by less than the menu bar height (~31 px): set a clearly smaller frame first, then the real one. Found on the K3-1 above the primary.
+- Hammerspoon hides its own windows from `hs.window.visibleWindows()`, which is why the integration test injects the console's workspace record instead of saving it.
 
 ## Swift App (Paused)
 
-The Swift app code is preserved but development is paused:
-- Screen cycling bug was fixed in `WindowManager.swift` (Jan 25)
-- Would need proper code signing for distribution
-- Accessibility permission is painful with ad-hoc signing
+4,106 lines in `SnapNutsApp/Sources/SnapNuts/`. Paused 2026-01-25: ad-hoc signing loses Accessibility permission on every rebuild, and public distribution needs Developer ID + notarization. Last release v1.1.0 (zip, 4 downloads). The website in `website/` still describes this app.
 
 ## History
 
-- **Dec 25, 2025**: Created concept with Hammerspoon
-- **Jan 7, 2026**: Converted to Swift app
-- **Jan 23, 2026**: Added advanced features
-- **Jan 25, 2026**: Fixed Swift bugs, updated Hammerspoon with all features, **paused Swift development**
-- **Feb 1, 2026**: Added laptop fallback shortcuts (Cmd+Ctrl+numbers) for MacBooks without numpad
+- **2025-12-25**: Concept, Hammerspoon + Rectangle prototype
+- **2026-01-07**: Native Swift app (Aaron, Magic Unicorn Tech)
+- **2026-01-23**: Swift v1.1.0 with grid overlay, workspaces, stash, undo
+- **2026-01-25**: Swift paused; Hammerspoon config gets every feature
+- **2026-02-01**: Laptop fallback shortcuts
+- **2026-10-15**: 2.0.0 as a Spoon: per-window cycling, portrait awareness, persistent workspaces, undo everywhere, conflict-free chords, tests
 
 ## Credits
 

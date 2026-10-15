@@ -1,23 +1,14 @@
 # SnapNuts - Next Steps
 
-## Current Status: PAUSED
+*Last updated: 2026-10-15*
 
-Using Hammerspoon version. Swift app development on hold.
+1. **Push `main` to `origin` and `gitea`, then tag `v2.0.0`.** Confirm branch and remote first (house rule).
+2. **Use it for a week.** The chord changes are the only thing that needs a human: undo is now Cmd+pad-, save Cmd+pad+, restore list Cmd+pad/, slots Cmd+Shift+padN. If any of them feels wrong, change the default in `SnapNuts.spoon/init.lua` (`defaultHotkeys`) and rerun the tests.
+3. **Website.** `website/index.html` describes the Swift app and links a download that does not exist. Rewrite around the Spoon (install is three commands) or leave it undeployed.
+4. **Swift app.** Decide: Developer ID signing and resume, or archive. Until then the README says paused.
 
-## If You Want to Resume Swift Development
+## Ideas not started
 
-1. Fix code signing (get Apple Developer account or use proper ad-hoc workflow)
-2. Test the screen cycling bug fix in `WindowManager.swift`
-3. Update website if needed
-4. Consider proper DMG distribution
-
-## For Now
-
-Just use Hammerspoon:
-```bash
-# Config is at ~/.hammerspoon/init.lua
-# Reload: Hammerspoon menu bar → Reload Config
-```
-
----
-*Last updated: January 25, 2026*
+- Hover-to-peek for stashed windows (claimed by the old website changelog, never built).
+- Display-triggered layouts: restore a workspace automatically when a named monitor connects.
+- Per-app memory ("Safari always opens in the right half").

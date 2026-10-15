@@ -33,9 +33,9 @@ function core.concat(...)
 end
 
 -- Pixel frame for a position on a screen frame.
--- Edges are rounded (not widths) so neighbouring cells meet exactly.
+-- Edges are rounded (not widths) so neighboring cells meet exactly.
 -- gap: full gap against the screen edge, half a gap on each inner edge,
--- so two neighbours end up one gap apart.
+-- so two neighbors end up one gap apart.
 function core.frameFor(pos, sf, gap)
   gap = gap or 0
   local eps = 1e-9

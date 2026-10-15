@@ -27,7 +27,7 @@ obj.core = core
 -- Settings. Change these before :start().
 -- ------------------------------------------------------------
 
---- Pixels between a snapped window and the screen edge / its neighbour.
+--- Pixels between a snapped window and the screen edge / its neighbor.
 obj.gap = 0
 --- Pixels between windows when tiling.
 obj.tileGap = 4

@@ -129,7 +129,7 @@ test("adjacent rows share edges exactly on every common screen height", function
   end
 end)
 
-test("gap leaves a full margin at the screen edge and one gap between neighbours", function()
+test("gap leaves a full margin at the screen edge and one gap between neighbors", function()
   local sf = {x = 0, y = 0, w = 1000, h = 600}
   local g = core.grid(2, 1)
   local l = core.frameFor(g[1], sf, 8)
@@ -244,7 +244,7 @@ end)
 -- describe(pos): the label shown in the alert
 -- ------------------------------------------------------------
 
-test("describe names strips, bands, quarters, cells and centred positions", function()
+test("describe names strips, bands, quarters, cells and centered positions", function()
   assertEq(core.describe({x = 0, y = 0, w = 1, h = 1}), "Full", "full")
   local halves = core.grid(2, 1)
   assertEq(core.describe(halves[1]), "Left", "left half")
@@ -260,7 +260,7 @@ test("describe names strips, bands, quarters, cells and centred positions", func
   assertEq(core.describe(q[1]), "Top-left", "TL")
   assertEq(core.describe(q[4]), "Bottom-right", "BR")
   assertEq(core.describe(core.grid(3, 3)[6]), "R2 C3", "ninth cell")
-  assertEq(core.describe({x = 0.1, y = 0.1, w = 0.8, h = 0.8}), "Center 80%", "centred")
+  assertEq(core.describe({x = 0.1, y = 0.1, w = 0.8, h = 0.8}), "Center 80%", "centered")
 end)
 
 -- ------------------------------------------------------------
