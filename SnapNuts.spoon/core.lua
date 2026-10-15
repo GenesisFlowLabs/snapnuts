@@ -88,4 +88,103 @@ function core.nextStep(n, current, screenIndex, numScreens)
   return 1, (screenIndex % numScreens) + 1
 end
 
+-- Turn a division 90 degrees: columns become rows. Cell order is kept, so
+-- "first press" on a portrait screen is the top band, not a thin left strip.
+function core.transpose(positions)
+  local out = {}
+  for i, p in ipairs(positions) do
+    out[i] = {x = p.y, y = p.x, w = p.h, h = p.w}
+  end
+  return out
+end
+
+-- The division as it should apply to this screen: unchanged on landscape,
+-- transposed on portrait. The number still equals the division.
+function core.orient(positions, sf)
+  if sf.h > sf.w then
+    return core.transpose(positions)
+  end
+  return positions
+end
+
+-- Human label for a position, used in the on-screen alert.
+function core.describe(pos)
+  local eps = 1e-6
+  if pos.w >= 1 - eps and pos.h >= 1 - eps then
+    return "Full"
+  end
+  local inset = pos.x > eps and pos.y > eps
+    and pos.x + pos.w < 1 - eps and pos.y + pos.h < 1 - eps
+  if inset then
+    return string.format("Center %d%%", round(pos.w * 100))
+  end
+  local cols, rows = round(1 / pos.w), round(1 / pos.h)
+  local c, r = round(pos.x / pos.w) + 1, round(pos.y / pos.h) + 1
+  if rows == 1 then
+    if cols == 2 then return ({"Left", "Right"})[c] end
+    if cols == 3 then return ({"Left", "Center", "Right"})[c] end
+    return string.format("Column %d/%d", c, cols)
+  end
+  if cols == 1 then
+    if rows == 2 then return ({"Top", "Bottom"})[r] end
+    if rows == 3 then return ({"Top", "Middle", "Bottom"})[r] end
+    return string.format("Row %d/%d", r, rows)
+  end
+  if cols == 2 and rows == 2 then
+    return ({"Top-left", "Top-right", "Bottom-left", "Bottom-right"})[(r - 1) * 2 + c]
+  end
+  return string.format("R%d C%d", r, c)
+end
+
+-- Grid shape for tiling n windows: as square as possible, wider than tall
+-- on landscape, taller than wide on portrait.
+function core.tileGrid(n, sf)
+  local a = math.ceil(math.sqrt(n))
+  local b = math.ceil(n / a)
+  if sf.h > sf.w then
+    return b, a
+  end
+  return a, b
+end
+
+-- One frame per window, tiled with `gap` around and between.
+function core.tileFrames(n, sf, gap)
+  gap = gap or 0
+  local cols, rows = core.tileGrid(n, sf)
+  local cw = (sf.w - gap * (cols + 1)) / cols
+  local ch = (sf.h - gap * (rows + 1)) / rows
+  local out = {}
+  for i = 1, n do
+    local r = math.ceil(i / cols)
+    local c = ((i - 1) % cols) + 1
+    out[i] = {
+      x = round(sf.x + gap + (c - 1) * (cw + gap)),
+      y = round(sf.y + gap + (r - 1) * (ch + gap)),
+      w = round(cw),
+      h = round(ch),
+    }
+  end
+  return out
+end
+
+-- A frame expressed as fractions of its screen, so a saved layout can be
+-- put back on a screen of a different size.
+function core.relativeFrame(f, sf)
+  return {
+    x = (f.x - sf.x) / sf.w,
+    y = (f.y - sf.y) / sf.h,
+    w = f.w / sf.w,
+    h = f.h / sf.h,
+  }
+end
+
+function core.absoluteFrame(rel, sf)
+  return {
+    x = round(sf.x + rel.x * sf.w),
+    y = round(sf.y + rel.y * sf.h),
+    w = round(rel.w * sf.w),
+    h = round(rel.h * sf.h),
+  }
+end
+
 return core

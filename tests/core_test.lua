@@ -213,5 +213,119 @@ test("nextStep on one screen stays put at the end of a single-cell division", fu
 end)
 
 -- ------------------------------------------------------------
+-- transpose / orient: portrait screens get the division turned 90 degrees
+-- ------------------------------------------------------------
+
+test("transpose turns vertical strips into horizontal bands", function()
+  local t = core.transpose(core.grid(3, 1))
+  local want = core.grid(1, 3)
+  assertEq(#t, 3, "count")
+  for i = 1, 3 do assertPos(t[i], want[i].x, want[i].y, want[i].w, want[i].h, "cell " .. i) end
+end)
+
+test("transpose keeps a 2x2 of quarters a 2x2 of quarters", function()
+  local t = core.transpose(core.grid(2, 2))
+  assertPos(t[1], 0, 0, 0.5, 0.5, "TL")
+  assertPos(t[2], 0, 0.5, 0.5, 0.5, "second is now below, not right")
+end)
+
+test("orient leaves a landscape screen alone", function()
+  local g = core.grid(3, 1)
+  local o = core.orient(g, {x = 0, y = 0, w = 1920, h = 1049})
+  assertEq(o == g, true, "same table on landscape")
+end)
+
+test("orient transposes on a portrait screen", function()
+  local o = core.orient(core.grid(3, 1), {x = 0, y = 0, w = 1080, h = 1889})
+  assertPos(o[2], 0, 1/3, 1, 1/3, "middle band")
+end)
+
+-- ------------------------------------------------------------
+-- describe(pos): the label shown in the alert
+-- ------------------------------------------------------------
+
+test("describe names strips, bands, quarters, cells and centred positions", function()
+  assertEq(core.describe({x = 0, y = 0, w = 1, h = 1}), "Full", "full")
+  local halves = core.grid(2, 1)
+  assertEq(core.describe(halves[1]), "Left", "left half")
+  assertEq(core.describe(halves[2]), "Right", "right half")
+  assertEq(core.describe(core.grid(3, 1)[2]), "Center", "center third")
+  assertEq(core.describe(core.grid(4, 1)[2]), "Column 2/4", "fourth strip")
+  local bands = core.grid(1, 2)
+  assertEq(core.describe(bands[1]), "Top", "top band")
+  assertEq(core.describe(bands[2]), "Bottom", "bottom band")
+  assertEq(core.describe(core.grid(1, 3)[2]), "Middle", "middle band")
+  assertEq(core.describe(core.grid(1, 4)[3]), "Row 3/4", "fourth band")
+  local q = core.grid(2, 2)
+  assertEq(core.describe(q[1]), "Top-left", "TL")
+  assertEq(core.describe(q[4]), "Bottom-right", "BR")
+  assertEq(core.describe(core.grid(3, 3)[6]), "R2 C3", "ninth cell")
+  assertEq(core.describe({x = 0.1, y = 0.1, w = 0.8, h = 0.8}), "Center 80%", "centred")
+end)
+
+-- ------------------------------------------------------------
+-- tileGrid / tileFrames: Tile All layout
+-- ------------------------------------------------------------
+
+test("tileGrid reproduces the original table for 1 to 12 windows", function()
+  local sf = {x = 0, y = 0, w = 1920, h = 1049}
+  local want = {
+    [1] = {1, 1}, [2] = {2, 1}, [3] = {2, 2}, [4] = {2, 2},
+    [5] = {3, 2}, [6] = {3, 2}, [7] = {3, 3}, [8] = {3, 3}, [9] = {3, 3},
+    [10] = {4, 3}, [11] = {4, 3}, [12] = {4, 3},
+  }
+  for n, cr in pairs(want) do
+    local c, r = core.tileGrid(n, sf)
+    assertEq(c, cr[1], n .. " cols"); assertEq(r, cr[2], n .. " rows")
+  end
+end)
+
+test("tileGrid grows past 12 windows instead of overflowing the screen", function()
+  local c, r = core.tileGrid(13, {x = 0, y = 0, w = 1920, h = 1049})
+  if c * r < 13 then error("13 windows need 13 cells, got " .. c .. "x" .. r) end
+end)
+
+test("tileGrid swaps columns and rows on a portrait screen", function()
+  local c, r = core.tileGrid(6, {x = 0, y = 0, w = 1080, h = 1889})
+  assertEq(c, 2, "cols"); assertEq(r, 3, "rows")
+end)
+
+test("tileFrames lays windows out with a gap around and between", function()
+  local sf = {x = 0, y = 0, w = 1000, h = 1000}
+  local frames = core.tileFrames(4, sf, 4)
+  assertEq(#frames, 4, "count")
+  assertEq(frames[1].x, 4, "f1.x"); assertEq(frames[1].y, 4, "f1.y")
+  assertEq(frames[1].w, 494, "f1.w"); assertEq(frames[1].h, 494, "f1.h")
+  assertEq(frames[2].x, 502, "f2.x"); assertEq(frames[2].y, 4, "f2.y")
+  assertEq(frames[3].x, 4, "f3.x"); assertEq(frames[3].y, 502, "f3.y")
+  assertEq(frames[4].x + frames[4].w, 996, "right margin")
+end)
+
+test("tileFrames returns exactly n frames even when the grid has spare cells", function()
+  local frames = core.tileFrames(3, {x = 0, y = 0, w = 1000, h = 1000}, 4)
+  assertEq(#frames, 3, "count")
+  assertEq(frames[3].y, 502, "third window on the second row")
+end)
+
+-- ------------------------------------------------------------
+-- relativeFrame / absoluteFrame: workspaces survive a monitor change
+-- ------------------------------------------------------------
+
+test("relativeFrame and absoluteFrame round-trip on the same screen", function()
+  local sf = {x = 1920, y = 0, w = 1080, h = 1889}
+  local f = {x = 2000, y = 100, w = 900, h = 700}
+  local back = core.absoluteFrame(core.relativeFrame(f, sf), sf)
+  assertEq(back.x, 2000, "x"); assertEq(back.y, 100, "y")
+  assertEq(back.w, 900, "w"); assertEq(back.h, 700, "h")
+end)
+
+test("absoluteFrame maps a saved layout onto a different screen", function()
+  local saved = core.relativeFrame({x = 0, y = 0, w = 960, h = 1049}, {x = 0, y = 0, w = 1920, h = 1049})
+  local f = core.absoluteFrame(saved, {x = 100, y = 25, w = 2560, h = 1415})
+  assertEq(f.x, 100, "x"); assertEq(f.w, 1280, "half of the new width")
+  assertEq(f.h, 1415, "full new height")
+end)
+
+-- ------------------------------------------------------------
 print(string.format("%d passed, %d failed", passed, failed))
 os.exit(failed == 0 and 0 or 1)
