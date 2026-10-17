@@ -1,0 +1,21 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  unit:
+    name: core geometry (Lua 5.4, the Lua inside Hammerspoon)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Lua 5.4
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q lua5.4
+      - name: Unit tests
+        run: lua5.4 tests/core_test.lua
+      - name: Syntax check the Spoon
+        run: luac5.4 -p SnapNuts.spoon/init.lua SnapNuts.spoon/core.lua

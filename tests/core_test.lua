@@ -1,10 +1,18 @@
 -- SnapNuts core tests. Plain Lua, no Hammerspoon needed.
 -- Run from anywhere:  lua tests/core_test.lua
-local here = arg and arg[0] and arg[0]:match("(.*/)") or "./"
+-- Also runs inside Hammerspoon (its Lua is 5.4), without exiting the app:
+--   hs -c 'dofile(os.getenv("HOME") .. "/path/to/snapnuts/tests/core_test.lua")'
+local here = (arg and arg[0] and arg[0]:match("(.*/)"))
+  or debug.getinfo(1, "S").source:sub(2):match("(.*/)") or "./"
+local insideHammerspoon = (hs ~= nil)
+local function quit(code)
+  if not insideHammerspoon then os.exit(code) end
+end
 local ok, core = pcall(dofile, here .. "../SnapNuts.spoon/core.lua")
 if not ok then
   print("FAIL: could not load core.lua :: " .. tostring(core))
-  os.exit(1)
+  quit(1)
+  return
 end
 
 local passed, failed = 0, 0
@@ -397,5 +405,5 @@ test("nextScreen on one screen stays put", function()
 end)
 
 -- ------------------------------------------------------------
-print(string.format("%d passed, %d failed", passed, failed))
-os.exit(failed == 0 and 0 or 1)
+print(string.format("%d passed, %d failed (Lua %s)", passed, failed, _VERSION:match("[%d.]+")))
+quit(failed == 0 and 0 or 1)
