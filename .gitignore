@@ -1,13 +1,8 @@
-SnapNuts-1.0.0.dmg
+# Private planning docs, not for the public repo
+docs/private/
 
-# Private docs - not for public repo
-PRD.md
-MARKETING.md
-FUTURE-ROADMAP.md
-
-# OS and build noise
+# OS noise
 .DS_Store
-SnapNutsApp/.build/
 
 # The product page is its own repo (snapnuts-website)
 website/
