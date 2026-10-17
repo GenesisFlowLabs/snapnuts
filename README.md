@@ -152,7 +152,7 @@ hs -t 60 -c 'dofile(os.getenv("HOME") .. "/path/to/snapnuts/tests/hs_test.lua")'
 
 ## Native app
 
-`SnapNutsApp/` holds a native Swift version with a settings window, a visual grid overlay and drag-to-snap. It is paused: distributing it needs Apple Developer ID signing, and without that every rebuild loses its Accessibility permission. The last build is on the [releases page](https://github.com/GenesisFlowLabs/snapnuts/releases). The Hammerspoon version above is the one that is maintained.
+The native Swift version, with a settings window, a visual grid overlay and drag-to-snap, lives on the [`swift-app` branch](https://github.com/GenesisFlowLabs/snapnuts/tree/swift-app). It is paused: distributing it needs Apple Developer ID signing, and without that every rebuild loses its Accessibility permission. The last build is on the [releases page](https://github.com/GenesisFlowLabs/snapnuts/releases). The Hammerspoon version above is the one that is maintained.
 
 ---
 
