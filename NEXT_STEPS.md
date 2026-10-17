@@ -1,14 +1,17 @@
 # SnapNuts - Next Steps
 
-*Last updated: 2026-10-15*
+*Last updated: 2026-10-17*
 
-1. **Push `main` to `origin` and `gitea`, then tag `v2.0.0`.** Confirm branch and remote first (house rule).
-2. **Use it for a week.** The chord changes are the only thing that needs a human: undo is now Cmd+pad-, save Cmd+pad+, restore list Cmd+pad/, slots Cmd+Shift+padN. If any of them feels wrong, change the default in `SnapNuts.spoon/init.lua` (`defaultHotkeys`) and rerun the tests.
-3. **Website.** `website/index.html` describes the Swift app and links a download that does not exist. Rewrite around the Spoon (install is three commands) or leave it undeployed.
-4. **Swift app.** Decide: Developer ID signing and resume, or archive. Until then the README says paused.
+1. **Push `main` and the `swift-app` branch to `origin` and `gitea`, then tag `v2.1.0`.** Confirm branch and remote first (house rule). The CI badge in the README goes live with the first push.
+2. **Decide the name.** Renaming is cheapest now: no users, GitHub redirects the old URL. The Spoon folder, `hs.loadSpoon("...")`, the symlink and the docs all change together in one commit.
+3. **Use it for a week.** New in 2.1: Cmd+pad. sends the window to the next screen, Cmd+Opt+pad. to the previous one. Stash now hides properly on the three-screen rig. If a chord feels wrong, change `defaultHotkeys` in `SnapNuts.spoon/init.lua` and rerun the tests.
+4. **Website.** `website/` (its own repo) still describes the Swift app. Rewrite around the Spoon or leave it undeployed. Do this before any announcement.
+5. **Announce** only after 1, 2 and 4: a GitHub release for the tag with notes from CHANGELOG.md, a 20-second GIF of the number keys, one post.
 
-## Ideas not started
+## 2.2 ideas
 
+- Grid overlay on each press: a half-second outline of the cells with the active one lit, on the target screen (`hs.canvas`).
+- Workspace restore that launches missing apps and places their windows as they appear.
 - Hover-to-peek for stashed windows (claimed by the old website changelog, never built).
 - Display-triggered layouts: restore a workspace automatically when a named monitor connects.
 - Per-app memory ("Safari always opens in the right half").

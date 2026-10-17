@@ -14,7 +14,7 @@ local obj = {}
 obj.__index = obj
 
 obj.name = "SnapNuts"
-obj.version = "2.0.0"
+obj.version = "2.1.0"
 obj.author = "Shafen Khan / Genesis Flow Labs"
 obj.license = "MIT - https://opensource.org/licenses/MIT"
 obj.homepage = "https://github.com/GenesisFlowLabs/snapnuts"

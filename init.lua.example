@@ -7,6 +7,7 @@ hs.loadSpoon("SnapNuts")
 -- spoon.SnapNuts.gap = 0             -- pixels between snapped windows and the screen edge
 -- spoon.SnapNuts.tileGap = 4         -- pixels between tiled windows
 -- spoon.SnapNuts.portraitAware = true -- thirds become bands on a portrait screen
+-- spoon.SnapNuts.mouseFollows = false -- move the pointer along when a window changes screens
 
 -- Optional: change a shortcut. One chord, or a list of chords.
 -- spoon.SnapNuts:bindHotkeys({

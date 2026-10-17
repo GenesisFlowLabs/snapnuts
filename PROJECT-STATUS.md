@@ -1,34 +1,39 @@
 # SnapNuts - Project Status
 
-**Last Updated:** 2026-10-15
-**Status:** 2.0.0 built, tested and live on the Mac Studio. Not yet pushed or tagged.
+**Last Updated:** 2026-10-17
+**Status:** 2.1.0 built, tested and live on the Mac Studio. 2.0.0 is pushed and tagged on both remotes; the 2.1 commits await the push.
 
 ---
 
 ## Where it stands
 
-SnapNuts is a Hammerspoon Spoon (`SnapNuts.spoon/`). The Swift app is paused.
+SnapNuts is a Hammerspoon Spoon (`SnapNuts.spoon/`). The Swift app lives on the `swift-app` branch, paused.
 
-Done on 2026-10-15, all committed on `main`:
+### 2.1.0 (2026-10-17)
 
-| Problem in 1.x | 2.0 |
+| Finding | Change |
 |---|---|
-| 14 Cmd+Shift chords stole Redo, Save As, select-to-line-end and the screenshot keys from every app | Utilities on numpad operators and Cmd+Ctrl; nothing collides |
-| One global counter per division, so windows continued each other's cycle | Each press reads the window's current cell and advances from it |
-| Undo skipped Tile All and Stash | Undo covers everything; a tile undoes as one step |
-| Workspaces lost on reload; restore matched on titles; screen id unused | JSON on disk; restore by screen name or scaled onto another screen |
-| Thirds and fourths were vertical strips on the portrait HP Z23i | Divisions turn 90 degrees on portrait screens |
-| 600 of 961 lines copy-pasted; Tile All duplicated in full | Grid generator + one bind helper; core logic in a pure module |
-| No tests | 30 unit + 23 integration checks |
-| Installed copy drifted from the repo (Oct 7 macro-pad block) | Spoon is symlinked from the repo; personal bindings live outside it |
-| README download link 404; docs said pad0, code said pad*; "all windows" meant current app | README rewritten; both keys work; all-apps tile added |
+| Stash Right from the primary dropped the window onto the portrait HP (885 of 900 px visible) | Stash parks off the edge of the whole desktop |
+| No way to throw a window to another monitor without resizing it | Send to next / previous screen; snapped windows keep their cell |
+| Undo and unstash set frames directly, bypassing the cross-screen fixes | Both go through `setFrameOn` |
+| Full-screen windows silently ignored every chord | Message shown; Tile All skips them |
+| Unit tests only ever ran on Lua 5.5 locally; Hammerspoon is 5.4 | GitHub Actions runs them on 5.4; the file also runs inside Hammerspoon |
+| Nine 0.1/1.x planning docs and a 271 MB Swift tree at the repo root | `docs/archive/`, `docs/private/` (ignored), `swift-app` branch |
+| Ctrl+Opt+1-3 "owner unknown" | Resolved: macOS system-assigned (disabled but reserved); `hs.hotkey.systemAssigned` confirms |
+
+Tests: 38 unit, 31 integration, all green on the three-screen rig.
+
+### 2.0.0 (2026-10-15)
+
+Per-window cycling, portrait awareness, persistent workspaces, undo everywhere, conflict-free chords, Spoon packaging, first tests. See CHANGELOG.md.
 
 ## Open
 
-- **Push and tag.** Five commits on `main` are local. Remotes: `origin` (GitHub) and `gitea`. Tag `v2.0.0` after the push.
-- **Website** (`website/`, separate repo) still sells the Swift app with a dead Download button. Either rewrite it around the Spoon or take it down. Not deployed anywhere today.
-- **Swift app decision.** Resume (needs an Apple Developer account for Developer ID signing) or archive it formally. The README calls it paused.
-- **Ctrl+Opt+1-3** are registered by something on this Mac; owner unknown. Only matters if a laptop direct-restore default is ever wanted.
+- **Push and tag 2.1.0.** Commits on `main` after v2.0.0 are local. Remotes: `origin` (GitHub) and `gitea`. Also push the new `swift-app` branch.
+- **Name.** Shafen is open to renaming; options and a recommendation were given on 2026-10-17. Rename before any announcement, while there are no users to migrate.
+- **Announcement.** Not yet. Website first (it still sells the Swift app), then a GitHub release with a short GIF.
+- **Website** (`website/`, separate Gitea-only repo, not deployed). Rewrite around the Spoon or take it down.
+- **2.2 ideas:** grid overlay on each press (hs.canvas), workspace restore that launches missing apps.
 
 ## Files
 

@@ -13,6 +13,7 @@
   <a href="https://github.com/GenesisFlowLabs/snapnuts/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License"></a>
   <img src="https://img.shields.io/badge/platform-macOS-lightgrey?style=flat-square" alt="Platform">
   <img src="https://img.shields.io/badge/runs%20on-Hammerspoon-blue?style=flat-square" alt="Hammerspoon">
+  <a href="https://github.com/GenesisFlowLabs/snapnuts/actions/workflows/tests.yml"><img src="https://github.com/GenesisFlowLabs/snapnuts/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
 </p>
 
 ---
@@ -45,7 +46,7 @@ git clone https://github.com/GenesisFlowLabs/snapnuts.git
 cd snapnuts && ./install.sh            # links SnapNuts.spoon into ~/.hammerspoon/Spoons
 ```
 
-Then open Hammerspoon, grant it Accessibility permission when asked, and reload the config from its menu bar icon. You will see "SnapNuts 2.0.0" flash on screen.
+Then open Hammerspoon, grant it Accessibility permission when asked, and reload the config from its menu bar icon. You will see "SnapNuts 2.1.0" flash on screen.
 
 `./install.sh --copy` copies the Spoon instead of linking it. By hand: copy `SnapNuts.spoon` into `~/.hammerspoon/Spoons/` and add these two lines to `~/.hammerspoon/init.lua`:
 
@@ -87,10 +88,12 @@ Cmd + pad* also tiles the app, for keyboards where pad0 is awkward.
 | Save the current layout to a slot | Cmd + pad+ | Cmd + Ctrl + S |
 | Restore a saved layout (pick from a list) | Cmd + pad/ | Cmd + Ctrl + W |
 | Restore slot 1 to 9 directly | Cmd + Shift + pad1 to pad9 | see below |
-| Stash the window off the left or right edge | Cmd + Ctrl + Shift + Left / Right | same |
+| Send the window to the next screen | Cmd + pad. | Cmd + Ctrl + Opt + Right |
+| Send the window to the previous screen | Cmd + Opt + pad. | Cmd + Ctrl + Opt + Left |
+| Stash the window off the left or right edge of the desktop | Cmd + Ctrl + Shift + Left / Right | same |
 | Bring every stashed window back | Cmd + Ctrl + Shift + U | same |
 
-None of these touch a macOS or common app shortcut. Redo, Save As, select-to-line-end and the screenshot keys all still work. Direct slot restore has no laptop default because every spare digit chord is either a screenshot key or already taken on too many Macs; bind your own (see below) or use the list.
+None of these touch a macOS or common app shortcut. Redo, Save As, select-to-line-end and the screenshot keys all still work. Send-to-screen takes three modifiers on the laptop because Cmd + Ctrl + arrows is Xcode's back and forward. Direct slot restore has no laptop default because every spare digit chord is either a screenshot key or reserved by macOS (Ctrl + Opt + 1 to 3 are system-assigned even when switched off); bind your own (see below) or use the list.
 
 ---
 
@@ -104,6 +107,10 @@ None of these touch a macOS or common app shortcut. Redo, Save As, select-to-lin
 
 **Tile All keeps growing.** One window fills the screen, two go side by side, and the grid keeps getting squarer however many windows you throw at it.
 
+**Send-to-screen keeps the cell.** A window you snapped to the left half arrives on the next screen in its left half, or its top band if that screen is portrait. Any other window keeps its size and position relative to the screen.
+
+**Stash parks the window off the edge of the whole desktop,** not the current screen, so on a multi-monitor rig it never lands on the neighboring screen. A sliver stays visible so you know it is there. Full-screen windows are left alone with a message, and anything Undo brings back goes back across screens.
+
 ---
 
 ## Customize
@@ -116,6 +123,7 @@ spoon.SnapNuts.gap = 0              -- pixels between snapped windows and the sc
 spoon.SnapNuts.tileGap = 4          -- pixels between tiled windows
 spoon.SnapNuts.portraitAware = true -- turn divisions on portrait screens
 spoon.SnapNuts.undoLevels = 10
+spoon.SnapNuts.mouseFollows = false -- move the pointer along when a window changes screens
 spoon.SnapNuts:start()
 ```
 
@@ -128,7 +136,7 @@ spoon.SnapNuts:bindHotkeys({
 })
 ```
 
-Action names: `maximize halves thirds fourths center sixths almostMax eighths ninths sixteenths tileApp tileAll undo saveWorkspace restoreWorkspace restore1` to `restore9 stashLeft stashRight unstash`.
+Action names: `maximize halves thirds fourths center sixths almostMax eighths ninths sixteenths tileApp tileAll undo saveWorkspace restoreWorkspace restore1` to `restore9 sendNext sendPrev stashLeft stashRight unstash`.
 
 If a chord is already registered by macOS or another app, SnapNuts says so when it starts and lists the chord in the Hammerspoon console, instead of leaving a key silently dead.
 
@@ -136,7 +144,7 @@ If a chord is already registered by macOS or another app, SnapNuts says so when 
 
 ## Tests
 
-The geometry is plain Lua and needs no Hammerspoon:
+The geometry is plain Lua and needs no Hammerspoon. GitHub Actions runs it on Lua 5.4, the Lua inside Hammerspoon, for every push:
 
 ```bash
 lua tests/core_test.lua
@@ -145,8 +153,10 @@ lua tests/core_test.lua
 The integration suite runs inside Hammerspoon and pushes the Hammerspoon console window through every path on whatever screens are attached, then puts it back:
 
 ```bash
-hs -t 60 -c 'dofile(os.getenv("HOME") .. "/path/to/snapnuts/tests/hs_test.lua")'
+hs -t 90 -c 'dofile(os.getenv("HOME") .. "/path/to/snapnuts/tests/hs_test.lua")'
 ```
+
+The `hs` command needs Hammerspoon's `hs.ipc` module loaded (`require("hs.ipc")` in your init.lua). Give the integration run a long `-t`, and do not call `hs` again in the seconds after `hs.reload()`: a call that lands while the message port is being torn down can hang past its timeout.
 
 ---
 

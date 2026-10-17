@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.1.0 - 2026-10-17
+
+### Added
+- **Send to the next or previous screen.** Cmd+pad. and Cmd+Opt+pad. (Cmd+Ctrl+Opt+Right/Left on a laptop). A window SnapNuts placed keeps its cell, oriented for the new screen; any other window keeps its frame relative to the screen.
+- **`mouseFollows` setting.** Moves the pointer along when a window changes screens. Off by default.
+- **Continuous integration.** The unit tests run on Lua 5.4 (the Lua inside Hammerspoon) for every push. The test file also runs inside Hammerspoon itself.
+
+### Fixed
+- **Stash on a multi-monitor rig.** Stash parked the window at the edge of the current screen, so with a screen beyond that edge the window landed on it in plain view (885 of 900 pixels visible on the portrait HP when stashing right from the primary). It now parks off the edge of the whole desktop, keeping its height and sliding only as far as needed to stay reachable.
+- **Undo and unstash across screens** go through the same frame-setting path as snapping, so apps that refuse a frame on another screen are handled.
+- **Native full-screen windows** get a message instead of silently doing nothing, and Tile All skips them.
+- **A window on no screen** no longer errors; it is treated as being on the main screen.
+
+### Changed
+- The Swift app moved to the `swift-app` branch. Planning documents from 0.1 and 1.x moved to `docs/archive/`.
+- Tests: 38 unit, 31 integration.
+
 ## 2.0.0 - 2026-10-15
 
 SnapNuts is now a Hammerspoon Spoon. Install with `./install.sh`, load with two lines, keep your own `init.lua`.
