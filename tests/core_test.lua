@@ -327,5 +327,75 @@ test("absoluteFrame maps a saved layout onto a different screen", function()
 end)
 
 -- ------------------------------------------------------------
+-- union / stashFrame: stash off the edge of the WHOLE desktop, not the screen
+-- ------------------------------------------------------------
+
+-- Shafen's rig: K3-1 above the primary, portrait HP to the right of both.
+local RIG = {
+  {x = 0, y = -1049, w = 1920, h = 1049},     -- K3-1
+  {x = 0, y = 31, w = 1920, h = 1049},        -- LS32D80xE (primary)
+  {x = 1920, y = -971, w = 1080, h = 1889},   -- HP Z23i (portrait)
+}
+
+test("union spans every screen", function()
+  local u = core.union(RIG)
+  assertEq(u.x, 0, "x"); assertEq(u.y, -1049, "y")
+  assertEq(u.w, 3000, "w"); assertEq(u.h, 2129, "h")
+end)
+
+test("stashFrame right goes past the rightmost screen, not onto it", function()
+  local f = {x = 200, y = 131, w = 900, h = 600}
+  local t = core.stashFrame("right", f, RIG, 15)
+  assertEq(t.x, 3000 - 15, "x: 15 px peeking in from the desktop's right edge")
+  assertEq(t.y, 131, "y unchanged when it already overlaps the edge screen")
+  assertEq(t.w, 900, "w"); assertEq(t.h, 600, "h")
+end)
+
+test("stashFrame left goes past the leftmost screen", function()
+  local f = {x = 200, y = 131, w = 900, h = 600}
+  local t = core.stashFrame("left", f, RIG, 15)
+  assertEq(t.x, 0 - 900 + 15, "x")
+  assertEq(t.y, 131, "y")
+end)
+
+test("stashFrame moves the window up or down so its peek still touches the edge screen", function()
+  -- y=1000 on the primary is below the HP's bottom (918): slide up to fit.
+  local f = {x = 200, y = 1000, w = 900, h = 600}
+  local t = core.stashFrame("right", f, RIG, 15)
+  assertEq(t.y, -971 + 1889 - 600, "y clamped inside the HP's vertical range")
+  -- A window taller than the edge screen sits at its top.
+  local tall = core.stashFrame("right", {x = 0, y = 0, w = 500, h = 3000}, RIG, 15)
+  assertEq(tall.y, -971, "tall window pinned to the top of the edge screen")
+end)
+
+test("stashFrame on a single screen is the plain screen-edge stash", function()
+  local sf = {x = 0, y = 25, w = 1440, h = 875}
+  local f = {x = 300, y = 200, w = 800, h = 500}
+  local r = core.stashFrame("right", f, {sf}, 15)
+  local l = core.stashFrame("left", f, {sf}, 15)
+  assertEq(r.x, 1440 - 15, "right x"); assertEq(r.y, 200, "right y")
+  assertEq(l.x, 0 - 800 + 15, "left x"); assertEq(l.y, 200, "left y")
+end)
+
+-- ------------------------------------------------------------
+-- nextScreen(index, numScreens, dir): hop one screen either way, wrapping
+-- ------------------------------------------------------------
+
+test("nextScreen hops forward and wraps", function()
+  assertEq(core.nextScreen(2, 3, 1), 3, "2 -> 3")
+  assertEq(core.nextScreen(3, 3, 1), 1, "3 wraps to 1")
+end)
+
+test("nextScreen hops backward and wraps", function()
+  assertEq(core.nextScreen(2, 3, -1), 1, "2 -> 1")
+  assertEq(core.nextScreen(1, 3, -1), 3, "1 wraps to 3")
+end)
+
+test("nextScreen on one screen stays put", function()
+  assertEq(core.nextScreen(1, 1, 1), 1, "forward")
+  assertEq(core.nextScreen(1, 1, -1), 1, "backward")
+end)
+
+-- ------------------------------------------------------------
 print(string.format("%d passed, %d failed", passed, failed))
 os.exit(failed == 0 and 0 or 1)

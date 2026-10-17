@@ -158,6 +158,80 @@ S:tileApp(app)
 S:undo()
 check("undo reverts a tile", frameNear(win:frame(), preTile, TOL), fmt(win:frame()))
 
+-- Helpers for the multi-screen checks below
+local function overlapWidth(f, s)
+  local i = hs.geometry.intersectionRect(f, s:fullFrame())
+  return (i.w > 0 and i.h > 0) and i.w or 0
+end
+local function desktop()
+  local l, r = math.huge, -math.huge
+  for _, s in ipairs(hs.screen.allScreens()) do
+    local f = s:fullFrame()
+    l = math.min(l, f.x); r = math.max(r, f.x + f.w)
+  end
+  return l, r
+end
+
+-- 9. Stash parks the window off the edge of the WHOLE desktop. On a rig with a
+-- screen to the right, a screen-edge stash would dump the window onto it.
+local primary = hs.screen.primaryScreen()
+win:moveToScreen(primary, false, false, 0)
+local psf = primary:frame()
+local preStash = {x = psf.x + 200, y = psf.y + 100, w = 900, h = 600}
+win:setFrame(preStash, 0)
+S._stashed = {}
+local okStash, errStash = pcall(function() S:stashSide("right", win) end)
+if okStash then
+  local f = win:frame()
+  local _, right = desktop()
+  check("stash right ends past the desktop's right edge", f.x >= right - S.stashPeek - TOL,
+    fmt(f) .. " desktop right edge " .. right)
+  local worst = 0
+  for _, s in ipairs(hs.screen.allScreens()) do worst = math.max(worst, overlapWidth(f, s)) end
+  check("stashed window shows at most the peek on any screen", worst <= S.stashPeek + TOL,
+    "widest overlap " .. worst .. " px")
+  S:unstashAll()
+  check("unstash brings it back", frameNear(win:frame(), preStash, TOL), fmt(win:frame()))
+else
+  check("stash right (stashSide)", false, errStash)
+end
+
+-- 10. Send to the next / previous screen keeps the window's relative frame
+if nScreens > 1 then
+  win:moveToScreen(screens[1], false, false, 0)
+  local s1 = screens[1]:frame()
+  local start = {x = s1.x + math.floor(s1.w * 0.25), y = s1.y + math.floor(s1.h * 0.1),
+                 w = math.floor(s1.w * 0.5), h = math.floor(s1.h * 0.6)}
+  win:setFrame(start, 0)
+  S._last = {}
+  local okMove, errMove = pcall(function() S:moveToScreen(1, win) end)
+  if okMove then
+    local gotIdx = S:screenIndexOf(screens, win:screen())
+    check("send next lands on screen 2", gotIdx == 2, "on " .. gotIdx)
+    local want = core.absoluteFrame(core.relativeFrame(start, s1), screens[2]:frame())
+    check("send next keeps the relative frame", frameNear(win:frame(), want, TOL),
+      fmt(win:frame()) .. " vs " .. fmt(want))
+    S:moveToScreen(-1, win)
+    check("send previous comes back to screen 1 at the original frame",
+      S:screenIndexOf(screens, win:screen()) == 1 and frameNear(win:frame(), start, TOL), fmt(win:frame()))
+
+    -- 11. A snapped window keeps its CELL across the hop (oriented for the target)
+    S._last = {}
+    S:snapWindow(win, "2")  -- Left half on screen 1
+    S:moveToScreen(1, win)
+    local cell = core.frameFor(S:positionsFor(S.divisions["2"], screens[2]:frame())[1], screens[2]:frame(), S.gap)
+    check("send next keeps the halves cell on the new screen", frameNear(win:frame(), cell, TOL),
+      fmt(win:frame()) .. " vs " .. fmt(cell))
+
+    -- 12. Undo after a hop goes back across screens
+    S:undo()
+    local back = core.frameFor(S:positionsFor(S.divisions["2"], s1)[1], s1, S.gap)
+    check("undo after send returns to the previous screen's cell", frameNear(win:frame(), back, TOL), fmt(win:frame()))
+  else
+    check("send to next screen (moveToScreen)", false, errMove)
+  end
+end
+
 -- Put the console back where it was and close it
 win:setFrame(original, 0)
 hs.closeConsole()

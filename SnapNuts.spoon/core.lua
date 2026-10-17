@@ -187,4 +187,52 @@ function core.absoluteFrame(rel, sf)
   }
 end
 
+-- Bounding box of several frames: the whole desktop when given every screen.
+function core.union(frames)
+  local l, t, r, b = math.huge, math.huge, -math.huge, -math.huge
+  for _, f in ipairs(frames) do
+    l = math.min(l, f.x); t = math.min(t, f.y)
+    r = math.max(r, f.x + f.w); b = math.max(b, f.y + f.h)
+  end
+  return {x = l, y = t, w = r - l, h = b - t}
+end
+
+local function clamp(v, lo, hi)
+  if lo > hi then return lo end
+  return math.max(lo, math.min(hi, v))
+end
+
+-- Frame for a window stashed off the left or right edge of the WHOLE desktop
+-- with `peek` pixels still showing. Stashing off the current screen's edge
+-- would drop the window onto a neighboring screen. The edge belongs to the
+-- screen that reaches furthest that way; the window keeps its y, moved only
+-- as far as needed so the peeking strip is on that screen, because macOS may
+-- refuse a frame that touches no screen at all.
+function core.stashFrame(side, f, screenFrames, peek)
+  local left = (side == "left")
+  local edge, owner
+  for _, sf in ipairs(screenFrames) do
+    local e = left and sf.x or (sf.x + sf.w)
+    if edge == nil or (left and e < edge) or (not left and e > edge) then
+      edge, owner = e, sf
+    end
+  end
+  -- Several screens can share the edge: prefer one the window already overlaps.
+  for _, sf in ipairs(screenFrames) do
+    local e = left and sf.x or (sf.x + sf.w)
+    if e == edge and f.y < sf.y + sf.h and f.y + f.h > sf.y then owner = sf end
+  end
+  return {
+    x = left and (edge - f.w + peek) or (edge - peek),
+    y = clamp(f.y, owner.y, owner.y + owner.h - f.h),
+    w = f.w,
+    h = f.h,
+  }
+end
+
+-- The screen one hop away (dir = 1 next, -1 previous), wrapping around.
+function core.nextScreen(index, numScreens, dir)
+  return ((index - 1 + dir) % numScreens) + 1
+end
+
 return core

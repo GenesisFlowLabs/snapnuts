@@ -43,6 +43,8 @@ obj.undoLevels = 10
 obj.workspaceFile = nil
 --- Pixels of a stashed window left peeking in from the edge.
 obj.stashPeek = 15
+--- Move the mouse pointer along when a window lands on another screen.
+obj.mouseFollows = false
 
 obj.logger = hs.logger.new("SnapNuts", "info")
 
@@ -94,6 +96,8 @@ local defaultHotkeys = {
   stashLeft        = {{{"cmd", "ctrl", "shift"}, "left"}},
   stashRight       = {{{"cmd", "ctrl", "shift"}, "right"}},
   unstash          = {{{"cmd", "ctrl", "shift"}, "u"}},
+  sendNext         = {{{"cmd"}, "pad."}, {{"cmd", "ctrl", "alt"}, "right"}},
+  sendPrev         = {{{"cmd", "alt"}, "pad."}, {{"cmd", "ctrl", "alt"}, "left"}},
 }
 -- Direct restore of slot N is numpad-only by default: every laptop digit chord
 -- is either a macOS screenshot key (Cmd+Shift / Cmd+Ctrl+Shift + 3,4) or taken
@@ -176,6 +180,8 @@ function obj:_actions()
   a.stashLeft = function() self:stash("left") end
   a.stashRight = function() self:stash("right") end
   a.unstash = function() self:unstashAll() end
+  a.sendNext = function() self:moveToScreen(1) end
+  a.sendPrev = function() self:moveToScreen(-1) end
   return a
 end
 
@@ -263,6 +269,37 @@ function obj:setFrameOn(win, screen, frame)
   end
 end
 
+--- The screen holding most of a frame; the main screen if none does.
+function obj:screenForFrame(frame)
+  local best, bestArea = nil, 0
+  for _, s in ipairs(hs.screen.allScreens()) do
+    local i = hs.geometry.intersectionRect(frame, s:fullFrame())
+    local area = math.max(0, i.w) * math.max(0, i.h)
+    if best == nil or area > bestArea then best, bestArea = s, area end
+  end
+  return best or hs.screen.mainScreen()
+end
+
+--- A window that cannot be snapped: native full screen, or none at all.
+function obj:_unsnappable(win)
+  if not win then
+    self:alert("No focused window")
+    return true
+  end
+  if win:isFullScreen() then
+    self:alert("Window is full screen (Ctrl+Cmd+F to leave)")
+    return true
+  end
+  return false
+end
+
+function obj:_followMouse(win, movedScreens)
+  if self.mouseFollows and movedScreens then
+    local f = win:frame()
+    hs.mouse.absolutePosition({x = f.x + f.w / 2, y = f.y + f.h / 2})
+  end
+end
+
 -- ------------------------------------------------------------
 -- Snapping
 -- ------------------------------------------------------------
@@ -280,13 +317,10 @@ function obj:snapWindow(win, key)
     self.logger.w("no division " .. tostring(key))
     return false
   end
-  if not win then
-    self:alert("No focused window")
-    return false
-  end
+  if self:_unsnappable(win) then return false end
 
   local screens = self:sortedScreens()
-  local sIdx = self:screenIndexOf(screens, win:screen())
+  local sIdx = self:screenIndexOf(screens, win:screen() or hs.screen.mainScreen())
   local sf = screens[sIdx]:frame()
   local positions = self:positionsFor(division, sf)
   local wf = win:frame()
@@ -317,6 +351,7 @@ function obj:snapWindow(win, key)
   if id then
     self._last[id] = {key = key, index = index, screen = target:id()}
   end
+  self:_followMouse(win, tIdx ~= sIdx)
 
   local label = division.name .. ": " .. core.describe(pos)
   if #tpositions > 1 then
@@ -326,6 +361,49 @@ function obj:snapWindow(win, key)
     label = label .. string.format(" [%d/%d]", tIdx, #screens)
   end
   self:alert(label)
+  return true
+end
+
+--- Send a window to the next (dir = 1) or previous (dir = -1) screen.
+--- A window SnapNuts placed keeps its cell, oriented for the new screen;
+--- any other window keeps its frame relative to the screen.
+function obj:moveToScreen(dir, win)
+  win = win or hs.window.focusedWindow()
+  if self:_unsnappable(win) then return false end
+  local screens = self:sortedScreens()
+  if #screens < 2 then
+    self:alert("Only one screen")
+    return false
+  end
+  local sIdx = self:screenIndexOf(screens, win:screen() or hs.screen.mainScreen())
+  local tIdx = core.nextScreen(sIdx, #screens, dir)
+  local sf, tsf = screens[sIdx]:frame(), screens[tIdx]:frame()
+  local wf, id = win:frame(), win:id()
+
+  local frame, label, keep
+  local mem = id and self._last[id]
+  if mem and mem.screen == screens[sIdx]:id() and self.divisions[mem.key] then
+    local division = self.divisions[mem.key]
+    local here = self:positionsFor(division, sf)
+    if core.matchPosition(here, sf, self.gap, wf, self.matchTolerance) == mem.index then
+      local pos = self:positionsFor(division, tsf)[mem.index]
+      if pos then
+        frame = core.frameFor(pos, tsf, self.gap)
+        label = division.name .. ": " .. core.describe(pos)
+        keep = {key = mem.key, index = mem.index, screen = screens[tIdx]:id()}
+      end
+    end
+  end
+  if not frame then
+    frame = core.absoluteFrame(core.relativeFrame(wf, sf), tsf)
+    label = "Moved"
+  end
+
+  self:recordUndo({{win = win, frame = wf}})
+  self:setFrameOn(win, screens[tIdx], frame)
+  if id then self._last[id] = keep end
+  self:_followMouse(win, true)
+  self:alert(string.format("%s [%d/%d]", label, tIdx, #screens))
   return true
 end
 
@@ -352,7 +430,7 @@ function obj:undo()
   for _, e in ipairs(entries) do
     local ok, visible = pcall(function() return e.win and e.win:isVisible() end)
     if ok and visible then
-      e.win:setFrame(e.frame, 0)
+      self:setFrameOn(e.win, self:screenForFrame(e.frame), e.frame)
       local id = e.win:id()
       if id then self._last[id] = nil end
       n = n + 1
@@ -375,7 +453,7 @@ end
 local function standardWindows(list)
   local out = {}
   for _, w in ipairs(list) do
-    if w:isStandard() and w:isVisible() and not w:isMinimized() then
+    if w:isStandard() and w:isVisible() and not w:isMinimized() and not w:isFullScreen() then
       out[#out + 1] = w
     end
   end
@@ -556,23 +634,20 @@ end
 -- Stashing: park a window at the screen edge, bring them all back later
 -- ------------------------------------------------------------
 
+--- Stash the focused window off the left or right edge of the whole desktop.
 function obj:stash(side)
-  local win = hs.window.focusedWindow()
-  if not win then
-    self:alert("No focused window")
-    return false
-  end
-  local sf = win:screen():frame()
+  return self:stashSide(side, hs.window.focusedWindow())
+end
+
+function obj:stashSide(side, win)
+  if self:_unsnappable(win) then return false end
+  local frames = {}
+  for i, s in ipairs(hs.screen.allScreens()) do frames[i] = s:fullFrame() end
   local f = win:frame()
-  local target
-  if side == "left" then
-    target = {x = sf.x - f.w + self.stashPeek, y = f.y, w = f.w, h = f.h}
-  else
-    target = {x = sf.x + sf.w - self.stashPeek, y = f.y, w = f.w, h = f.h}
-  end
+  local target = core.stashFrame(side, f, frames, self.stashPeek)
   self:recordUndo({{win = win, frame = f}})
   table.insert(self._stashed, {win = win, frame = f})
-  win:setFrame(target, 0)
+  self:setFrameOn(win, self:screenForFrame(target), target)
   self:alert("Stashed " .. side)
   return true
 end
@@ -586,7 +661,7 @@ function obj:unstashAll()
   for _, s in ipairs(self._stashed) do
     local ok, visible = pcall(function() return s.win and s.win:isVisible() end)
     if ok and visible then
-      s.win:setFrame(s.frame, 0)
+      self:setFrameOn(s.win, self:screenForFrame(s.frame), s.frame)
       n = n + 1
     end
   end
