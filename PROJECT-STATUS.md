@@ -30,7 +30,7 @@ Per-window cycling, portrait awareness, persistent workspaces, undo everywhere, 
 ## Open
 
 - **Push and tag 2.1.0.** Commits on `main` after v2.0.0 are local. Remotes: `origin` (GitHub) and `gitea`. Also push the new `swift-app` branch.
-- **Name.** Shafen is open to renaming; options and a recommendation were given on 2026-10-17. Rename before any announcement, while there are no users to migrate.
+- **Name: stays SnapNuts.** Decided by Shafen on 2026-10-17 after seeing the alternatives. Closed, do not reopen.
 - **Announcement.** Not yet. Website first (it still sells the Swift app), then a GitHub release with a short GIF.
 - **Website** (`website/`, separate Gitea-only repo, not deployed). Rewrite around the Spoon or take it down.
 - **2.2 ideas:** grid overlay on each press (hs.canvas), workspace restore that launches missing apps.

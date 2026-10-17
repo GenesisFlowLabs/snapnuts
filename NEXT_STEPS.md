@@ -3,10 +3,10 @@
 *Last updated: 2026-10-17*
 
 1. **Push `main` and the `swift-app` branch to `origin` and `gitea`, then tag `v2.1.0`.** Confirm branch and remote first (house rule). The CI badge in the README goes live with the first push.
-2. **Decide the name.** Renaming is cheapest now: no users, GitHub redirects the old URL. The Spoon folder, `hs.loadSpoon("...")`, the symlink and the docs all change together in one commit.
+2. **The name stays SnapNuts** (decided 2026-10-17). Nothing to do.
 3. **Use it for a week.** New in 2.1: Cmd+pad. sends the window to the next screen, Cmd+Opt+pad. to the previous one. Stash now hides properly on the three-screen rig. If a chord feels wrong, change `defaultHotkeys` in `SnapNuts.spoon/init.lua` and rerun the tests.
 4. **Website.** `website/` (its own repo) still describes the Swift app. Rewrite around the Spoon or leave it undeployed. Do this before any announcement.
-5. **Announce** only after 1, 2 and 4: a GitHub release for the tag with notes from CHANGELOG.md, a 20-second GIF of the number keys, one post.
+5. **Announce** only after 1 and 4: a GitHub release for the tag with notes from CHANGELOG.md, a 20-second GIF of the number keys, one post.
 
 ## 2.2 ideas
 
