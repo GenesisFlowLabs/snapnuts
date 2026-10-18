@@ -48,7 +48,7 @@ cd snapnuts && ./install.sh            # links SnapNuts.spoon into ~/.hammerspoo
 
 Then open Hammerspoon, grant it Accessibility permission when asked, and reload the config from its menu bar icon. You will see "SnapNuts 2.1.0" flash on screen.
 
-`./install.sh --copy` copies the Spoon instead of linking it. By hand: copy `SnapNuts.spoon` into `~/.hammerspoon/Spoons/` and add these two lines to `~/.hammerspoon/init.lua`:
+`./install.sh --copy` copies the Spoon instead of linking it. Without git: download `SnapNuts.spoon.zip` from the [latest release](https://github.com/GenesisFlowLabs/snapnuts/releases/latest), unzip it, double-click `SnapNuts.spoon` (Hammerspoon installs it) or copy it into `~/.hammerspoon/Spoons/`, and add these two lines to `~/.hammerspoon/init.lua`:
 
 ```lua
 hs.loadSpoon("SnapNuts")

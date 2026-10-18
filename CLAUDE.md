@@ -5,10 +5,11 @@ SnapNuts is a free, open source window manager for macOS. The core idea: **the n
 
 **Project Location:** `~/projects/tools/snapnuts/`
 **GitHub (PUBLIC):** https://github.com/GenesisFlowLabs/snapnuts (mirror: git.unicorncommander.ai/GenesisFlowLabs/snapnuts)
+**Push over SSH.** `origin` is `git@github.com:GenesisFlowLabs/snapnuts.git` (switched 2026-10-17). The HTTPS token in the keychain has no `workflow` scope and rejects any push that touches `.github/workflows/`, while the other refs in the same push still land.
 
 ## Current State (2026-10-17)
 
-### STATUS: 2.1.0, a Hammerspoon Spoon. Live on this Mac.
+### STATUS: 2.1.0, a Hammerspoon Spoon. Live on this Mac, pushed to both remotes, released on GitHub (v2.1.0 is Latest, `SnapNuts.spoon.zip` attached). CI green.
 
 | File | Purpose |
 |------|---------|
@@ -16,12 +17,12 @@ SnapNuts is a free, open source window manager for macOS. The core idea: **the n
 | `SnapNuts.spoon/core.lua` | Pure geometry, no `hs.*`. Grid, frames, matching, orientation, tiling, desktop union, stash frame |
 | `tests/core_test.lua` | 38 unit tests. `lua tests/core_test.lua`, also runs inside Hammerspoon (Lua 5.4) |
 | `tests/hs_test.lua` | 31-check integration suite, runs inside Hammerspoon (below) |
-| `.github/workflows/tests.yml` | CI: unit tests + syntax check on Lua 5.4 for every push |
+| `.github/workflows/tests.yml` | CI: unit tests + syntax check on Lua 5.4 (ubuntu-24.04, checkout v7) for every push to `main` |
 | `install.sh` | Symlinks the Spoon into `~/.hammerspoon/Spoons/`, adds the two loader lines |
 | `init.lua.example` | What a user's own `init.lua` needs |
 | `docs/archive/` | 0.1 and 1.x planning docs, history only. `docs/private/` is ignored |
 | `appcast.xml` | Sparkle feed polled by installed 1.x Swift apps. Stays at the root (raw URL on `main`) |
-| `website/` | Product page, its own Gitea-only repo (snapnuts-website), ignored here. Still describes the Swift app, not deployed |
+| `website/` | **Retired 2026-10-17.** Its own private repo (snapnuts-website on GitHub and Gitea), ignored here. Written for the Swift app, never deployed, no domain. The README is the product page |
 
 The Swift app is on the **`swift-app` branch** (paused since 2026-01-25 over code signing). Not on `main`.
 
@@ -61,7 +62,7 @@ Utilities: undo Cmd+pad- / Cmd+Ctrl+Z; save Cmd+pad+ / Cmd+Ctrl+S; restore list 
 - **2026-01-25**: Swift paused; Hammerspoon config gets every feature
 - **2026-02-01**: Laptop fallback shortcuts
 - **2026-10-15**: 2.0.0 as a Spoon: per-window cycling, portrait awareness, persistent workspaces, undo everywhere, conflict-free chords, tests. Pushed and tagged 2026-10-17
-- **2026-10-17**: 2.1.0: send-to-screen, desktop-edge stash, hardening, CI, repo cleanup, Swift app to its own branch
+- **2026-10-17**: 2.1.0: send-to-screen, desktop-edge stash, hardening, CI, repo cleanup, Swift app to its own branch. Pushed, released on GitHub (2.0.0 and 2.1.0, with the Spoon zip) and the website retired the same evening
 
 ## Credits
 

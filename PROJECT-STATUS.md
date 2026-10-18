@@ -1,7 +1,7 @@
 # SnapNuts - Project Status
 
 **Last Updated:** 2026-10-17
-**Status:** 2.1.0 built, tested and live on the Mac Studio. 2.0.0 is pushed and tagged on both remotes; the 2.1 commits await the push.
+**Status:** 2.1.0 live on the Mac Studio, pushed to GitHub and Gitea, released on GitHub (Latest, with `SnapNuts.spoon.zip`). CI green.
 
 ---
 
@@ -20,6 +20,7 @@ SnapNuts is a Hammerspoon Spoon (`SnapNuts.spoon/`). The Swift app lives on the 
 | Unit tests only ever ran on Lua 5.5 locally; Hammerspoon is 5.4 | GitHub Actions runs them on 5.4; the file also runs inside Hammerspoon |
 | Nine 0.1/1.x planning docs and a 271 MB Swift tree at the repo root | `docs/archive/`, `docs/private/` (ignored), `swift-app` branch |
 | Ctrl+Opt+1-3 "owner unknown" | Resolved: macOS system-assigned (disabled but reserved); `hs.hotkey.systemAssigned` confirms |
+| GitHub Releases still showed 1.1.0 (the Swift app) as Latest while the README said 2.1.0 | Releases 2.0.0 and 2.1.0 created; 2.1.0 is Latest with `SnapNuts.spoon.zip` |
 
 Tests: 38 unit, 31 integration, all green on the three-screen rig.
 
@@ -29,10 +30,10 @@ Per-window cycling, portrait awareness, persistent workspaces, undo everywhere, 
 
 ## Open
 
-- **Push and tag 2.1.0.** Commits on `main` after v2.0.0 are local. Remotes: `origin` (GitHub) and `gitea`. Also push the new `swift-app` branch.
+- **A week of daily use** before anything is announced. Chord changes, if any, become 2.1.1.
+- **GIF, then one post.** Shot list and draft in `docs/private/ANNOUNCE.md`. Shafen records; an agent must not screen-record this Mac.
 - **Name: stays SnapNuts.** Decided by Shafen on 2026-10-17 after seeing the alternatives. Closed, do not reopen.
-- **Announcement.** Not yet. Website first (it still sells the Swift app), then a GitHub release with a short GIF.
-- **Website** (`website/`, separate Gitea-only repo, not deployed). Rewrite around the Spoon or take it down.
+- **Website** (`website/`, separate private repo on GitHub and Gitea). Retired 2026-10-17: never deployed, no domain, described the Swift app. The README is the product page. Retire note committed there (9d7410c), not pushed.
 - **2.2 ideas:** grid overlay on each press (hs.canvas), workspace restore that launches missing apps.
 
 ## Files
